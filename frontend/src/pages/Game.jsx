@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { IconHome } from "@tabler/icons-react";
+import { TestComponent } from "./test.jsx"
 
 export function Game() {
   return (
@@ -12,6 +13,7 @@ export function Game() {
         Hier entsteht ein ganz tolles Game. <br />
         Für mehr infos: game@lukasczulak.de
       </p>
+      <TestComponent/>
     </>
   );
 }
