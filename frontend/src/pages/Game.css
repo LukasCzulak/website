@@ -1,0 +1,112 @@
+.game-container {
+  width: 100vw;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+  color: #f2e2c4;
+  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.8);
+  padding: 2rem;
+  box-sizing: border-box;
+}
+
+.game-background {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  
+  background-image: url('/wood.jpg'); 
+  
+  background-repeat: repeat; 
+  background-size: 200px;
+  
+  filter: brightness(0.4) sepia(0.6) contrast(1.2);
+}
+
+.fog-layer {
+  position: absolute;
+  inset: -50%;
+  background-repeat: repeat;
+  mix-blend-mode: screen;
+}
+
+
+@keyframes fogMove {
+  from { transform: translateX(0); }
+  to   { transform: translateX(50%); }
+}
+
+
+.fog-layer-1 {
+  background-image: url('/fog.png');
+  background-size: 1000px;
+  opacity: 0.2;
+  animation: fogDrift 90s linear infinite; 
+  animation-delay: -10s; 
+}
+
+.fog-layer-2 {
+  background-image: url('/fog.png');
+  background-size: 1600px;
+  opacity: 0.2; 
+  animation: fogDrift2 120s linear infinite;
+  animation-delay: -45s;
+}
+
+.fog-layer-3 {
+  background-image: url('/fog.png');
+  background-size: 800px; 
+  opacity: 0.15;
+  animation: fogDriftReverse 90s linear infinite;
+  animation-delay: -25s;
+}
+
+.fog-layer-4 {
+  background-image: url('/fog.png');
+  background-size: 1200px; 
+  opacity: 0.2; 
+  animation: fogDriftReverse2 120s linear infinite;
+  animation-delay: -5s;
+}
+
+@keyframes fogDrift {
+  0% { background-position: 0 0; }
+  100% { background-position: 1000px 0; }
+}
+
+@keyframes fogDrift2 {
+  0% { background-position: 0 0; }
+  100% { background-position: 1600px 1600px; }
+}
+
+@keyframes fogDriftReverse {
+  0% { background-position: 0 0; }
+  100% { background-position: -800px 0; }
+}
+
+@keyframes fogDriftReverse2 {
+  0% { background-position: 0 0; }
+  100% { background-position: -1200px -1200px; }
+}
+
+.settings-toggle {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid #c9a473;
+  color: #c9a473;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 100;
+  font-family: inherit;
+}
+
+.settings-toggle:hover {
+  background: rgba(0, 0, 0, 0.8);
+}

@@ -22,7 +22,7 @@ build/
 # Firebase / GCP
 .firebase/
 ,firebase
-src/main/resources/service-account-key.json
+backend/src/main/resources/service-account-key.json
 
 # OS & Editor files
 .DS_Store
