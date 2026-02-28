@@ -9,7 +9,7 @@ import reactor.core.publisher.Mono;
 @Service
 public class TestService {
     private final Firestore firestore;
-    private static final String COLLECTION_NAME = "Test"; // Ihr echter Collection-Name
+    private static final String COLLECTION_NAME = "Test";
 
     public TestService(Firestore firestore) {
         this.firestore = firestore;
