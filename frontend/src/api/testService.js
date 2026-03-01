@@ -1,12 +1,13 @@
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+
 export async function getTests() {
-  const res = await fetch("http://localhost:8080/api/test");
+  const res = await fetch(`${API_URL}/api/test`);
   return res.json();
 }
 
 export async function createTest(data) {
-  // Generate a unique ID for the document
   const id = crypto.randomUUID();
-  const res = await fetch("http://localhost:8080/api/test", {
+  const res = await fetch(`${API_URL}/api/test`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ id, ...data }),
