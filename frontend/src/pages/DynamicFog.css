@@ -1,0 +1,45 @@
+.dynamic-fog-container {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 100;
+  overflow: hidden;
+}
+
+.fog-particle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 660px; 
+  height: 360px;
+  
+  background-image: url('/fog_better.png');
+  background-size: 100% 100%;
+  background-position: center;
+  background-repeat: no-repeat;
+  
+  mix-blend-mode: screen;
+  filter: sepia(var(--sepia)) hue-rotate(var(--hue)) saturate(var(--saturate));
+  animation: floatFog var(--duration) linear forwards;
+
+  will-change: transform, opacity; 
+  backface-visibility: hidden; 
+  perspective: 1000px;
+}
+
+@keyframes floatFog {
+  0% {
+    opacity: 0;
+    transform: translate(calc(var(--startX) - 50%), calc(var(--startY) - 50%)) scale(var(--size)) rotate(var(--rotation));
+  }
+  25% {
+    opacity: var(--maxOpacity);
+  }
+  75% {
+    opacity: var(--maxOpacity);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(var(--endX) - 50%), calc(var(--endY) - 50%)) scale(var(--size)) rotate(calc(var(--rotation)));
+  }
+}

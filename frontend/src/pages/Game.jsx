@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { IconHome, IconBattery, IconBatteryOff } from "@tabler/icons-react";
 import { TestComponent } from "./test.jsx";
 import "./Game.css";
+import { DynamicFog } from "./DynamicFog";
 
 import { LoginView } from "../views/LoginView";
 import { CharacterSelectionView } from "../views/CharacterSelectionView";
@@ -118,12 +119,7 @@ export function Game() {
     <div className="game-container">
       <div className="game-background" />
       {!lowPowerMode && (
-        <>
-          <div className="fog-layer fog-layer-1" />
-          <div className="fog-layer fog-layer-2" />
-          <div className="fog-layer fog-layer-3" />
-          <div className="fog-layer fog-layer-4" />
-        </>
+        <DynamicFog />
       )}
 
       <Link
