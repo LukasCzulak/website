@@ -1,3 +1,6 @@
+import { useEffect, useRef } from "react";
+import { Client } from "@stomp/stompjs";
+
 export function CharacterSelectionView({
   characters,
   lockedCharId,
@@ -7,6 +10,42 @@ export function CharacterSelectionView({
   currentUser,
   isAdmin,
 }) {
+  const clientRef = useRef(null);
+
+  useEffect(() => {
+    const client = new Client({
+      brokerURL: "ws://localhost:8080/ws",
+      reconnectDelay: 5000,
+
+      onConnect: () => {
+        console.log("Connected");
+
+        client.subscribe("/topic/startGame", () => {
+          console.log("Game started");
+          onAdminStart();
+        });
+      },
+    });
+
+    client.activate();
+    clientRef.current = client;
+
+    return () => {
+      client.deactivate();
+    };
+  }, [onAdminStart]);
+
+  const handleStart = () => {
+    const client = clientRef.current;
+
+    if (client?.connected) {
+      client.publish({
+        destination: "/app/startGame",
+        body: "clicked",
+      });
+    }
+  };
+
   return (
     <div className="selection-wrapper">
       <h2
@@ -53,7 +92,10 @@ export function CharacterSelectionView({
       </div>
       {isAdmin && (
         <div style={{ textAlign: "center", marginTop: "40px" }}>
-          <button className="pirate-btn admin-btn" onClick={onAdminStart}>
+          <button
+            className="pirate-btn admin-btn"
+            onClick={() => handleStart()}
+          >
             (DM) Spiel starten
           </button>
         </div>

@@ -12,11 +12,13 @@
   "dependencies": {
     "@mantine/core": "^8.3.15",
     "@mantine/hooks": "^8.3.15",
+    "@stomp/stompjs": "^7.3.0",
     "@tabler/icons-react": "^3.34.1",
     "bcrypt": "^6.0.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "react-router-dom": "^7.9.1"
+    "react-router-dom": "^7.9.1",
+    "sockjs-client": "^1.6.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.33.0",

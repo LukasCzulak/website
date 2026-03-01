@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { IconHome, IconBattery, IconBatteryOff } from "@tabler/icons-react";
 import { TestComponent } from "./test.jsx";
@@ -17,13 +17,45 @@ import gravesIcon from "../assets/icons/Graves Icon.webp";
 
 export function Game() {
   const [lowPowerMode, setLowPowerMode] = useState(false);
-  const [currentView, setCurrentView] = useState("login"); // 'login', 'selection', 'stats' or 'game'
+  const [currentView, setCurrentView] = useState(() => {
+    return localStorage.getItem("currentView") || "login";
+  }); // 'login', 'selection', 'stats' or 'game'
 
   const [viewingChar, setViewingChar] = useState(null); // grad am Anschauen
-  const [lockedCharId, setLockedCharId] = useState(null); // locked-in character
+  const [lockedCharId, setLockedCharId] = useState(
+    () => localStorage.getItem("lockedCharId") || null,
+  ); // locked-in character
   const [takenCharIds, setTakenCharIds] = useState(["nautilus", "missfortune"]); // von anderen locked-in
-  const [currentUser, setCurrentUser] = useState("");
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [currentUser, setCurrentUser] = useState(
+    () => localStorage.getItem("user") || "",
+  );
+  const [isAdmin, setIsAdmin] = useState(
+    () => localStorage.getItem("isAdmin") || false,
+  );
+
+  useEffect(() => {
+    setCurrentUser(localStorage.getItem("user"));
+    if (currentUser && currentView === "login") {
+      setCurrentView("selection");
+    }
+  }, [currentUser]);
+
+  useEffect(() => {
+    localStorage.setItem("currentView", currentView);
+  }, [currentView]);
+
+  useEffect(() => {
+    localStorage.setItem("isAdmin", isAdmin);
+  }, [isAdmin]);
+
+  useEffect(() => {
+    localStorage.setItem("lockedCharId", lockedCharId);
+  }, [lockedCharId]);
+
+  const onLogin = () => {
+    setCurrentView("selection");
+    localStorage.setItem("user", currentUser);
+  };
 
   const characters = [
     { id: "fizz", name: "Fizz", title: "Der Gezeitentäuscher", img: fizzIcon },
@@ -126,7 +158,7 @@ export function Game() {
       >
         {currentView === "login" && (
           <LoginView
-            onLogin={() => setCurrentView("selection")}
+            onLogin={() => onLogin()}
             currentUser={currentUser}
             setCurrentUser={setCurrentUser}
             isAdmin={isAdmin}
