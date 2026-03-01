@@ -17,32 +17,69 @@ import gravesIcon from "../assets/icons/Graves Icon.webp";
 
 export function Game() {
   const [lowPowerMode, setLowPowerMode] = useState(false);
-  const [currentView, setCurrentView] = useState('login'); // 'login', 'selection', 'stats' or 'game'
-  
+  const [currentView, setCurrentView] = useState("login"); // 'login', 'selection', 'stats' or 'game'
+
   const [viewingChar, setViewingChar] = useState(null); // grad am Anschauen
   const [lockedCharId, setLockedCharId] = useState(null); // locked-in character
-  const [takenCharIds, setTakenCharIds] = useState(['nautilus', 'missfortune']); // von anderen locked-in
+  const [takenCharIds, setTakenCharIds] = useState(["nautilus", "missfortune"]); // von anderen locked-in
+  const [currentUser, setCurrentUser] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const characters = [
-    { id: 'fizz', name: 'Fizz', title: "Der Gezeitentäuscher", img: fizzIcon },
-    { id: 'gp', name: 'Gangplank', title: "Die Salzwassergeißel", img: gpIcon },
-    { id: 'graves', name: 'Graves', title: "Der Gesetzlose", img: gravesIcon },
-    { id: 'illaoi', name: 'Illaoi', title: "Die Krakenpriesterin", img: null },
-    { id: 'missfortune', name: 'Miss Fortune', title: "Die Kopfgeldjägerin", img: null },
-    { id: 'nami', name: 'Nami', title: "Die Gezeitenruferin", img: null },
-    { id: 'nautilus', name: 'Nautilus', title: "Der Titan der Tiefe", img: null },
-    { id: 'nilah', name: 'Nilah', title: "Die entfesselte Freude", img: null },
-    { id: 'pyke', name: 'Pyke', title: "Der Schlitzer vom Bluthafen", img: null },
-    { id: 'tahm', name: 'Tahm Kench', title: "Der Flusskönig", img: null },
-    { id: 'tf', name: 'Twisted Fate', title: "Der Kartenmeister", img: null },
-    { id: 'gragas', name: 'Gragas', title: "Der Unruhestifter", img: null },
-    { id: 'janna', name: 'Janna', title: "Die Sturmzeugin", img: null },
-    { id: 'samira', name: 'Samira', title: "Die Wüstenrose", img: null },
-    { id: 'tristana', name: 'Tristana', title: "Die Yordle-Schützin", img: null },
-    { id: 'akshan', name: 'Akshan', title: "Der abtrünnige Wächter", img: null },
-    { id: 'ryze', name: 'Ryze', title: "Der Runenmagier", img: null },
-    { id: 'katarina', name: 'Katarina', title: "Die sinistere Klinge", img: null },
-    { id: 'quinn', name: 'Quinn', title: "Die Schwingen von Demacia", img: null }
+    { id: "fizz", name: "Fizz", title: "Der Gezeitentäuscher", img: fizzIcon },
+    { id: "gp", name: "Gangplank", title: "Die Salzwassergeißel", img: gpIcon },
+    { id: "graves", name: "Graves", title: "Der Gesetzlose", img: gravesIcon },
+    { id: "illaoi", name: "Illaoi", title: "Die Krakenpriesterin", img: null },
+    {
+      id: "missfortune",
+      name: "Miss Fortune",
+      title: "Die Kopfgeldjägerin",
+      img: null,
+    },
+    { id: "nami", name: "Nami", title: "Die Gezeitenruferin", img: null },
+    {
+      id: "nautilus",
+      name: "Nautilus",
+      title: "Der Titan der Tiefe",
+      img: null,
+    },
+    { id: "nilah", name: "Nilah", title: "Die entfesselte Freude", img: null },
+    {
+      id: "pyke",
+      name: "Pyke",
+      title: "Der Schlitzer vom Bluthafen",
+      img: null,
+    },
+    { id: "tahm", name: "Tahm Kench", title: "Der Flusskönig", img: null },
+    { id: "tf", name: "Twisted Fate", title: "Der Kartenmeister", img: null },
+    { id: "gragas", name: "Gragas", title: "Der Unruhestifter", img: null },
+    { id: "janna", name: "Janna", title: "Die Sturmzeugin", img: null },
+    { id: "samira", name: "Samira", title: "Die Wüstenrose", img: null },
+    {
+      id: "tristana",
+      name: "Tristana",
+      title: "Die Yordle-Schützin",
+      img: null,
+    },
+    {
+      id: "akshan",
+      name: "Akshan",
+      title: "Der abtrünnige Wächter",
+      img: null,
+    },
+    { id: "ryze", name: "Ryze", title: "Der Runenmagier", img: null },
+    {
+      id: "katarina",
+      name: "Katarina",
+      title: "Die sinistere Klinge",
+      img: null,
+    },
+    {
+      id: "quinn",
+      name: "Quinn",
+      title: "Die Schwingen von Demacia",
+      img: null,
+    },
   ];
 
   return (
@@ -57,12 +94,21 @@ export function Game() {
         </>
       )}
 
-      <Link to="/home" style={{ position: "absolute", top: 20, left: 20, color: "#c9a473", zIndex: 200 }}>
+      <Link
+        to="/home"
+        style={{
+          position: "absolute",
+          top: 20,
+          left: 20,
+          color: "#c9a473",
+          zIndex: 200,
+        }}
+      >
         <IconHome />
       </Link>
 
-      <button 
-        className="settings-toggle" 
+      <button
+        className="settings-toggle"
         onClick={() => setLowPowerMode(!lowPowerMode)}
         style={{ zIndex: 200 }}
       >
@@ -70,45 +116,55 @@ export function Game() {
         <span>{lowPowerMode ? "Sparmodus an" : "Animationen an"}</span>
       </button>
 
-      <div style={{ position: 'relative', zIndex: 0, height: '100%', paddingTop: '60px' }}>
-        
-        {currentView === 'login' && (
-          <LoginView onLogin={() => setCurrentView('selection')} />
+      <div
+        style={{
+          position: "relative",
+          zIndex: 0,
+          height: "100%",
+          paddingTop: "60px",
+        }}
+      >
+        {currentView === "login" && (
+          <LoginView
+            onLogin={() => setCurrentView("selection")}
+            currentUser={currentUser}
+            setCurrentUser={setCurrentUser}
+            isAdmin={isAdmin}
+            setIsAdmin={setIsAdmin}
+          />
         )}
 
         {/* Zeige das Raster an, wenn wir in 'selection' ODER 'stats' sind */}
-        {(currentView === 'selection' || currentView === 'stats') && (
-          <CharacterSelectionView 
+        {(currentView === "selection" || currentView === "stats") && (
+          <CharacterSelectionView
             characters={characters}
             lockedCharId={lockedCharId}
             takenCharIds={takenCharIds}
             onSelectCharacter={(char) => {
               setViewingChar(char);
-              setCurrentView('stats');
-            }} 
-            onAdminStart={() => setCurrentView('game')}
+              setCurrentView("stats");
+            }}
+            onAdminStart={() => setCurrentView("game")}
+            currentUser={currentUser}
+            isAdmin={isAdmin}
           />
         )}
 
-        {currentView === 'game' && (
-          <MainGameView />
-        )}
-
+        {currentView === "game" && <MainGameView />}
       </div>
 
-      {currentView === 'stats' && viewingChar && (
-        <CharacterStatsView 
+      {currentView === "stats" && viewingChar && (
+        <CharacterStatsView
           character={viewingChar}
           isTaken={takenCharIds.includes(viewingChar.id)}
           isMine={lockedCharId === viewingChar.id}
-          onCancel={() => setCurrentView('selection')} 
+          onCancel={() => setCurrentView("selection")}
           onLockIn={() => {
             setLockedCharId(viewingChar.id);
-            setCurrentView('selection');
-          }} 
+            setCurrentView("selection");
+          }}
         />
       )}
-
     </div>
   );
 }

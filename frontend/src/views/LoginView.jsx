@@ -2,14 +2,13 @@ import { useState, useEffect } from "react";
 import { Text, Button, Flex, Title } from "@mantine/core";
 import { getUsers, createUser, requestLogin } from "../api/userService";
 
-export function LoginView({ onLogin }) {
+export function LoginView({ onLogin, currentUser, setCurrentUser, isAdmin, setIsAdmin }) {
   const [view, setView] = useState("login");
   const [users, setUsers] = useState([]);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [passwordCheck, setPasswordCheck] = useState("");
   const [existing, setExisting] = useState(false);
-
   useEffect(() => {
     getUsers()
       .then(setUsers)
@@ -23,7 +22,7 @@ export function LoginView({ onLogin }) {
       }
     }
 
-    if (password === passwordCheck && !existing) {
+    if (password === passwordCheck && !existing && username) {
       createUser({ username, password });
       setUsername("");
       setPassword("");
@@ -37,6 +36,8 @@ export function LoginView({ onLogin }) {
       const res = await requestLogin({ username, password });
       console.log(res); // sollte "Login erfolgreich" sein
       if (res.status === "ok") {
+        setCurrentUser(username);
+        checkIsAdmin(username)
         setUsername("");
         setPassword("");
         onLogin();
@@ -48,6 +49,19 @@ export function LoginView({ onLogin }) {
       alert("Falscher Benutzername oder Passwort");
     }
   };
+
+  const checkIsAdmin = (user) => {
+    for (let u of users) {
+      console.log(u);
+      if (u?.username === user) {
+        if (u?.admin) {
+          setIsAdmin(true);
+        }
+      }
+    }
+    console.log(user);
+    console.log(isAdmin);
+  }
 
   return (
     <div className="login-wrapper">
