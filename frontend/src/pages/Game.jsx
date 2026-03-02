@@ -11,9 +11,10 @@ import { CharacterStatsView } from "../views/CharacterStatsView";
 import { MainGameView } from "../views/MainGameView";
 import { SettingsView } from "../views/SettingsView";
 
-import fizzIcon from "../assets/icons/Fizz icon.jpg";
-import gpIcon from "../assets/icons/Gangplank Icon.webp";
-import gravesIcon from "../assets/icons/Graves Icon.webp";
+import fizzIcon from "../assets/icons/fizz_icon.webp";
+import gpIcon from "../assets/icons/gangplank_icon.webp";
+import gravesIcon from "../assets/icons/graves_icon.webp";
+import mfIcon from "../assets/icons/missfortune_icon.webp";
 /* hier alle anderen einfügen */
 /* ZUERST ALLE IN PNG ODER JPG UMWANDELN!*/
 
@@ -98,7 +99,7 @@ export function Game() {
       id: "missfortune",
       name: "Miss Fortune",
       title: "Die Kopfgeldjägerin",
-      img: null,
+      img: mfIcon,
     },
     { id: "nami", name: "Nami", title: "Die Gezeitenruferin", img: null },
     {

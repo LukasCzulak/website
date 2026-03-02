@@ -11,7 +11,7 @@ export function DynamicFog({ particleLimit = 25, initialAmount = 5, particleLoop
   useEffect(() => {
     const generateImages = async () => {
       const img = new Image();
-      img.src = '/fog_better.png';
+      img.src = '/fog_better.webp';
 
       await new Promise(resolve => { img.onload = resolve; });
 
@@ -25,37 +25,37 @@ export function DynamicFog({ particleLimit = 25, initialAmount = 5, particleLoop
       // 1. original
       ctx.filter = 'none';
       ctx.drawImage(img, 0, 0);
-      variations.push(canvas.toDataURL('image/png'));
+      variations.push(canvas.toDataURL('image/webp'));
 
-      // 2. original again (higher probability)
+      // 2. light green
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.filter = 'none';
+      ctx.filter = 'sepia(0.8) hue-rotate(80deg) saturate(150%)';
       ctx.drawImage(img, 0, 0);
-      variations.push(canvas.toDataURL('image/png'));
+      variations.push(canvas.toDataURL('image/webp'));
 
       // 3. light green
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.filter = 'sepia(0.8) hue-rotate(80deg) saturate(150%)';
       ctx.drawImage(img, 0, 0);
-      variations.push(canvas.toDataURL('image/png'));
+      variations.push(canvas.toDataURL('image/webp'));
 
       // 4. deep toxic green
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.filter = 'sepia(1) hue-rotate(100deg) saturate(300%)';
       ctx.drawImage(img, 0, 0);
-      variations.push(canvas.toDataURL('image/png'));
+      variations.push(canvas.toDataURL('image/webp'));
 
       // 5. light sea blue
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.filter = 'sepia(0.8) hue-rotate(170deg) saturate(200%)'; 
       ctx.drawImage(img, 0, 0);
-      variations.push(canvas.toDataURL('image/png'));
+      variations.push(canvas.toDataURL('image/webp'));
 
       // 6. icy cold threatening blue
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.filter = 'sepia(1) hue-rotate(210deg) saturate(250%) contrast(1.2) brightness(0.9)';
       ctx.drawImage(img, 0, 0);
-      variations.push(canvas.toDataURL('image/png'));
+      variations.push(canvas.toDataURL('image/webp'));
 
       setCachedImages(variations);
     };
