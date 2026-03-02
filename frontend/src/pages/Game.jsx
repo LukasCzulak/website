@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
-import { IconHome, IconBattery, IconBatteryOff } from "@tabler/icons-react";
-import { TestComponent } from "./test.jsx";
+import { IconHome, IconSettings } from "@tabler/icons-react";
+
 import "./Game.css";
 import { DynamicFog } from "./DynamicFog";
 
@@ -9,6 +9,7 @@ import { LoginView } from "../views/LoginView";
 import { CharacterSelectionView } from "../views/CharacterSelectionView";
 import { CharacterStatsView } from "../views/CharacterStatsView";
 import { MainGameView } from "../views/MainGameView";
+import { SettingsView } from "../views/SettingsView";
 
 import fizzIcon from "../assets/icons/Fizz icon.jpg";
 import gpIcon from "../assets/icons/Gangplank Icon.webp";
@@ -18,9 +19,15 @@ import gravesIcon from "../assets/icons/Graves Icon.webp";
 
 export function Game() {
   const [lowPowerMode, setLowPowerMode] = useState(false);
+  const [fogLimit, setFogLimit] = useState(25);
+  const [fogLoops, setFogLoops] = useState(3);
+  const [fogInitial, setFogInitial] = useState(5);
+
   const [currentView, setCurrentView] = useState(() => {
     return localStorage.getItem("currentView") || "login";
-  }); // 'login', 'selection', 'stats' or 'game'
+  }); // 'login', 'selection', 'stats', 'settings' or 'game'
+
+  const previousView = useRef("selection");
 
   const [viewingChar, setViewingChar] = useState(null); // grad am Anschauen
   const [lockedCharId, setLockedCharId] = useState(
@@ -56,6 +63,15 @@ export function Game() {
   const onLogin = () => {
     setCurrentView("selection");
     localStorage.setItem("user", currentUser);
+  };
+
+  const openSettings = () => {
+    previousView.current = currentView; // remember where we came from
+    setCurrentView("settings");
+  };
+
+  const closeSettings = () => {
+    setCurrentView(previousView.current); // go back to where we were
   };
 
   const characters = [
@@ -118,8 +134,12 @@ export function Game() {
   return (
     <div className="game-container">
       <div className="game-background" />
-      {!lowPowerMode && (
-        <DynamicFog />
+      {!lowPowerMode && currentView !== "settings" && (
+        <DynamicFog 
+          particleLimit={fogLimit} 
+          particleLoops={fogLoops} 
+          initialAmount={fogInitial} 
+        />
       )}
 
       <Link
@@ -136,12 +156,20 @@ export function Game() {
       </Link>
 
       <button
-        className="settings-toggle"
-        onClick={() => setLowPowerMode(!lowPowerMode)}
-        style={{ zIndex: 200 }}
+        onClick={openSettings}
+        style={{ 
+          position: "absolute", 
+          top: 20, 
+          right: 20, 
+          zIndex: 200, 
+          background: "transparent", 
+          border: "none", 
+          color: "#c9a473", 
+          cursor: "pointer",
+          padding: 0
+        }}
       >
-        {lowPowerMode ? <IconBattery /> : <IconBatteryOff />}
-        <span>{lowPowerMode ? "Sparmodus an" : "Animationen an"}</span>
+        <IconSettings size={32} />
       </button>
 
       <div
@@ -190,6 +218,23 @@ export function Game() {
           onLockIn={() => {
             setLockedCharId(viewingChar.id);
             setCurrentView("selection");
+          }}
+        />
+      )}
+
+      {currentView === "settings" && (
+        <SettingsView
+          initialLowPower={lowPowerMode}
+          initialLimit={fogLimit}
+          initialLoops={fogLoops}
+          initialInitial={fogInitial}
+          onCancel={closeSettings}
+          onApply={(newPower, newLimit, newLoops, newInitial) => {
+            setLowPowerMode(newPower);
+            setFogLimit(newLimit);
+            setFogLoops(newLoops);
+            setFogInitial(newInitial);
+            closeSettings();
           }}
         />
       )}
