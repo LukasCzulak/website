@@ -36,8 +36,12 @@ export function LoginView({ onLogin, currentUser, setCurrentUser, isAdmin, setIs
       const res = await requestLogin({ username, password });
       console.log(res); // sollte "Login erfolgreich" sein
       if (res.status === "ok") {
+        // determine admin status synchronously
+        const adminFlag = users.find((u) => u.username === username)?.admin || false;
+        setIsAdmin(adminFlag);
         setCurrentUser(username);
-        checkIsAdmin(username)
+        localStorage.setItem("user", username);
+        localStorage.setItem("isAdmin", adminFlag);
         setUsername("");
         setPassword("");
         onLogin();
@@ -52,15 +56,12 @@ export function LoginView({ onLogin, currentUser, setCurrentUser, isAdmin, setIs
 
   const checkIsAdmin = (user) => {
     for (let u of users) {
-      console.log(u);
       if (u?.username === user) {
         if (u?.admin) {
           setIsAdmin(true);
         }
       }
     }
-    console.log(user);
-    console.log(isAdmin);
   }
 
   return (

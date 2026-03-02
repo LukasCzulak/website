@@ -35,18 +35,33 @@ export function Game() {
   ); // locked-in character
   const [takenCharIds, setTakenCharIds] = useState(["nautilus", "missfortune"]); // von anderen locked-in
   const [currentUser, setCurrentUser] = useState(
-    () => localStorage.getItem("user") || "",
+    () => {
+      const u = localStorage.getItem("user");
+      return u && u !== "null" ? u : "";
+    }
   );
   const [isAdmin, setIsAdmin] = useState(
-    () => localStorage.getItem("isAdmin") || false,
+    () => {
+      const a = localStorage.getItem("isAdmin");
+      return a === "true";
+    }
   );
 
+  // sync user with storage whenever it changes, remove when empty
   useEffect(() => {
-    setCurrentUser(localStorage.getItem("user"));
+    if (currentUser) {
+      localStorage.setItem("user", currentUser);
+    } else {
+      localStorage.removeItem("user");
+    }
+  }, [currentUser]);
+
+  // move to selection after a successful login
+  useEffect(() => {
     if (currentUser && currentView === "login") {
       setCurrentView("selection");
     }
-  }, [currentUser]);
+  }, [currentUser, currentView]);
 
   useEffect(() => {
     localStorage.setItem("currentView", currentView);
@@ -206,7 +221,7 @@ export function Game() {
           />
         )}
 
-        {currentView === "game" && <MainGameView />}
+        {currentView === "game" && <MainGameView setCurrentView={setCurrentView} />}
       </div>
 
       {currentView === "stats" && viewingChar && (
@@ -235,6 +250,14 @@ export function Game() {
             setFogLoops(newLoops);
             setFogInitial(newInitial);
             closeSettings();
+          }}
+          currentUser={currentUser}
+          setCurrentView={setCurrentView}
+          onLogout={() => {
+            setCurrentUser("");
+            setIsAdmin(false);
+            localStorage.clear();
+            setCurrentView("login");
           }}
         />
       )}
