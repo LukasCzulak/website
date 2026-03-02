@@ -234,6 +234,7 @@ export function Game() {
             setLockedCharId(viewingChar.id);
             setCurrentView("selection");
           }}
+          onAdminStart={() => setCurrentView("game")}
         />
       )}
 
@@ -259,6 +260,7 @@ export function Game() {
             localStorage.clear();
             setCurrentView("login");
           }}
+          onAdminStart={() => setCurrentView("game")}
         />
       )}
     </div>

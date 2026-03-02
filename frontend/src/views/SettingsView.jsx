@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
+import { Client } from "@stomp/stompjs";
 import {
   Switch,
   Slider,
@@ -21,7 +22,35 @@ export function SettingsView({
   currentUser,
   setCurrentView,
   onLogout,
+  onAdminStart,
 }) {
+  const clientRef = useRef(null);
+
+  useEffect(() => {
+    const client = new Client({
+      brokerURL:
+        "wss://" + import.meta.env.VITE_API_URL + "/ws" ||
+        "wss://http://localhost:8080/ws",
+      reconnectDelay: 5000,
+
+      onConnect: () => {
+        console.log("Connected");
+
+        client.subscribe("/topic/startGame", () => {
+          console.log("Game started");
+          onAdminStart();
+        });
+      },
+    });
+
+    client.activate();
+    clientRef.current = client;
+
+    return () => {
+      client.deactivate();
+    };
+  }, [onAdminStart]);
+
   // save unsaved changes
   const [lowPower, setLowPower] = useState(initialLowPower);
   const [limit, setLimit] = useState(initialLimit);
