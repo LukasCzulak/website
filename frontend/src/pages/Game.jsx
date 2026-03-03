@@ -10,13 +10,9 @@ import { CharacterSelectionView } from "../views/CharacterSelectionView";
 import { CharacterStatsView } from "../views/CharacterStatsView";
 import { MainGameView } from "../views/MainGameView";
 import { SettingsView } from "../views/SettingsView";
+import { CharacterCreationView } from "../views/CharacterCreationView";
 
-import fizzIcon from "../assets/icons/fizz_icon.webp";
-import gpIcon from "../assets/icons/gangplank_icon.webp";
-import gravesIcon from "../assets/icons/graves_icon.webp";
-import mfIcon from "../assets/icons/missfortune_icon.webp";
-/* hier alle anderen einfügen */
-/* ZUERST ALLE IN PNG ODER JPG UMWANDELN!*/
+import { getCharacters } from "../api/characterService";
 
 export function Game() {
   const [lowPowerMode, setLowPowerMode] = useState(false);
@@ -90,62 +86,24 @@ export function Game() {
     setCurrentView(previousView.current); // go back to where we were
   };
 
-  const characters = [
-    { id: "fizz", name: "Fizz", title: "Der Gezeitentäuscher", img: fizzIcon },
-    { id: "gp", name: "Gangplank", title: "Die Salzwassergeißel", img: gpIcon },
-    { id: "graves", name: "Graves", title: "Der Gesetzlose", img: gravesIcon },
-    { id: "illaoi", name: "Illaoi", title: "Die Krakenpriesterin", img: null },
-    {
-      id: "missfortune",
-      name: "Miss Fortune",
-      title: "Die Kopfgeldjägerin",
-      img: mfIcon,
-    },
-    { id: "nami", name: "Nami", title: "Die Gezeitenruferin", img: null },
-    {
-      id: "nautilus",
-      name: "Nautilus",
-      title: "Der Titan der Tiefe",
-      img: null,
-    },
-    { id: "nilah", name: "Nilah", title: "Die entfesselte Freude", img: null },
-    {
-      id: "pyke",
-      name: "Pyke",
-      title: "Der Schlitzer vom Bluthafen",
-      img: null,
-    },
-    { id: "tahm", name: "Tahm Kench", title: "Der Flusskönig", img: null },
-    { id: "tf", name: "Twisted Fate", title: "Der Kartenmeister", img: null },
-    { id: "gragas", name: "Gragas", title: "Der Unruhestifter", img: null },
-    { id: "janna", name: "Janna", title: "Die Sturmzeugin", img: null },
-    { id: "samira", name: "Samira", title: "Die Wüstenrose", img: null },
-    {
-      id: "tristana",
-      name: "Tristana",
-      title: "Die Yordle-Schützin",
-      img: null,
-    },
-    {
-      id: "akshan",
-      name: "Akshan",
-      title: "Der abtrünnige Wächter",
-      img: null,
-    },
-    { id: "ryze", name: "Ryze", title: "Der Runenmagier", img: null },
-    {
-      id: "katarina",
-      name: "Katarina",
-      title: "Die sinistere Klinge",
-      img: null,
-    },
-    {
-      id: "quinn",
-      name: "Quinn",
-      title: "Die Schwingen von Demacia",
-      img: null,
-    },
-  ];
+  const [characters, setCharacters] = useState([]);
+  const [isLoadingChars, setIsLoadingChars] = useState(true);
+
+  useEffect(() => {
+    getCharacters()
+      .then((data) => {
+        setCharacters(data);
+        setIsLoadingChars(false);
+      })
+      .catch((err) => {
+        console.error("Failed to load characters:", err);
+        setIsLoadingChars(false);
+      });
+  }, []);
+
+  if (isLoadingChars) {
+    return <div style={{ color: "#c9a473", textAlign: "center", marginTop: "50px" }}>Lade Champions aus der Datenbank...</div>;
+  }
 
   return (
     <div className="game-container">
@@ -225,14 +183,24 @@ export function Game() {
         {currentView === "game" && <MainGameView setCurrentView={setCurrentView} />}
       </div>
 
-      {currentView === "stats" && viewingChar && (
+      {currentView === "stats" && viewingChar?.id === "NEW_CHAR" && (
+        <CharacterCreationView
+          onCancel={() => setCurrentView("selection")}
+          onSuccess={() => {
+            setCurrentView("selection");
+            window.location.reload(); 
+          }}
+        />
+      )}
+
+      {currentView === "stats" && viewingChar?.id !== "NEW_CHAR" && (
         <CharacterStatsView
           character={viewingChar}
-          isTaken={takenCharIds.includes(viewingChar.id)}
-          isMine={lockedCharId === viewingChar.id}
+          isTaken={takenCharIds.includes(viewingChar?.id)}
+          isMine={lockedCharId === viewingChar?.id}
           onCancel={() => setCurrentView("selection")}
           onLockIn={() => {
-            setLockedCharId(viewingChar.id);
+            setLockedCharId(viewingChar?.id);
             setCurrentView("selection");
           }}
           onAdminStart={() => setCurrentView("game")}

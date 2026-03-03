@@ -1,6 +1,58 @@
 import { useRef, useEffect } from "react";
 import { Client } from "@stomp/stompjs";
 
+function ParsedText({ text }) {
+  if (!text) return null;
+
+  const parts = text.split(
+    /(<red>.*?<\/red>|<purple>.*?<\/purple>|<green>.*?<\/green>|<blue>.*?<\/blue>)/g
+  );
+
+  return (
+    <span>
+      {parts.map((part, index) => {
+        if (part.startsWith("<red>") && part.endsWith("</red>")) {
+          const innerText = part.replace("<red>", "").replace("</red>", "");
+          return (
+            <span key={index} style={{ color: "red" }}>
+              {innerText}
+            </span>
+          );
+        }
+
+        if (part.startsWith("<purple>") && part.endsWith("</purple>")) {
+          const innerText = part.replace("<purple>", "").replace("</purple>", "");
+          return (
+            <span key={index} style={{ color: "purple" }}>
+              {innerText}
+            </span>
+          );
+        }
+
+        if (part.startsWith("<green>") && part.endsWith("</green>")) {
+          const innerText = part.replace("<green>", "").replace("</green>", "");
+          return (
+            <span key={index} style={{ color: "green" }}>
+              {innerText}
+            </span>
+          );
+        }
+
+        if (part.startsWith("<blue>") && part.endsWith("</blue>")) {
+          const innerText = part.replace("<blue>", "").replace("</blue>", "");
+          return (
+            <span key={index} style={{ color: "blue" }}>
+              {innerText}
+            </span>
+          );
+        }
+
+        return <span key={index}>{part}</span>;
+      })}
+    </span>
+  );
+}
+
 export function CharacterStatsView({
   character,
   isTaken,
@@ -36,19 +88,21 @@ export function CharacterStatsView({
     };
   }, [onAdminStart]);
 
+  if (!character) return null;
+
   return (
     <div className="stats-overlay">
       <div className="stats-modal">
         <div className="stats-header">
           <div className="stats-icon-large">
-            {character.img ? (
+            {character.icon ? (
               <img
-                src={character.img}
+                src={"/icons/" + character.icon}
                 alt={character.name}
                 className="champ-img"
               />
             ) : (
-              character.name.charAt(0)
+              character.name?.charAt(0)
             )}
           </div>
           <div className="stats-title-group">
@@ -71,18 +125,91 @@ export function CharacterStatsView({
             </p>
           )}
 
-          <div className="stats-content-box">
+          <div>
             <p style={{ fontStyle: "italic", color: "#8c765a" }}>
-              Lore Platzhalter: "In den dunklen Gassen von Bilgewasser..."
+              {character.description}
             </p>
+
+            <div style={{ display: "flex", justifyContent: "space-between", marginTop: "15px", padding: "10px", background: "rgba(0,0,0,0.2)", borderRadius: "5px" }}>
+              <span>Leben: <strong>{character.hitpoints}</strong></span>
+              <span>Schaden: <strong>{character.attack_damage}</strong></span>
+              <span>Speed: <strong>{character.attack_speed}</strong></span>
+            </div>
+          </div>
+          
+          <div className="stats-content-box">
             <div style={{ marginTop: "20px" }}>
-              <strong>Fähigkeiten Vorschau:</strong>
-              <ul>
-                <li>Passive: Passive</li>
-                <li>Q: Boom!</li>
+              <strong style={{ color: "#c9a473" }}>Spielstil: </strong> 
+              <ParsedText text={character.playstyle} />
+            </div>
+
+            <div style={{ marginTop: "20px" }}>
+              <strong style={{ color: "#c9a473" }}>Perfekt für dich, wenn: </strong> 
+              <ParsedText text={character.perfect} />
+            </div>
+          </div>
+          
+          
+          <h3 style={{ color: "#c9a473", marginTop: "25px" }}>
+            Fähigkeiten:
+          </h3>
+
+          <div className="stats-content-box">
+            <div style={{ marginTop: "20px" }}>
+              <ul style={{ listStyleType: "none", paddingLeft: 0, marginTop: "10px" }}>
+                
+                <li style={{ marginBottom: "15px" }}>
+                  <strong style={{ color: "#c9a473" }}>Passive: </strong> 
+                  <ParsedText text={character.abilities?.passive.description} />
+                </li>
+                
+                <li style={{ marginBottom: "15px" }}>
+                  <strong style={{ color: "#c9a473" }}>
+                    Regulär (CD: {character.abilities?.regular.cooldown}): 
+                  </strong>{" "}
+                  <ParsedText text={character.abilities?.regular.description} />
+                </li>
+                
+                <li style={{ marginBottom: "15px" }}>
+                  <strong style={{ color: "#c9a473" }}>
+                    Ultimativ (CD: {character.abilities?.ultimate.cooldown}): 
+                  </strong>{" "}
+                  <ParsedText text={character.abilities?.ultimate.description} />
+                </li>
               </ul>
             </div>
           </div>
+
+          {(character.abilities?.hidden_1.activated || character.abilities?.hidden_2.activated) && (
+            <div>
+              <h3 style={{ color: "#c9a473", marginTop: "25px" }}>
+                Versteckt!
+              </h3>
+              
+              <div className="stats-content-box"> 
+                <ul style={{ listStyleType: "none", paddingLeft: 0, marginTop: "10px" }}>
+      
+                  {character.abilities?.hidden_1.activated && (
+                    <li style={{ marginBottom: "15px" }}>
+                      <strong style={{ color: "#c9a473" }}>
+                        Versteckte Fähigkeit 1: 
+                      </strong>{" "}
+                      <ParsedText text={character.abilities?.hidden_1.description} />
+                    </li>
+                  )}
+
+                  {character.abilities?.hidden_2.activated && (
+                    <li style={{ marginBottom: "15px" }}>
+                      <strong style={{ color: "#c9a473" }}>
+                        Versteckte Fähigkeit 2: 
+                      </strong>{" "}
+                      <ParsedText text={character.abilities?.hidden_2.description} />
+                    </li>
+                  )}
+                </ul>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="stats-footer">

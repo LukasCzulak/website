@@ -75,8 +75,12 @@ export function CharacterSelectionView({
               onClick={() => onSelectCharacter(char)}
             >
               <div className="champ-icon-circle">
-                {char.img ? (
-                  <img src={char.img} alt={char.name} className="champ-img" />
+                {char.icon ? (
+                  <img
+                    src={"/icons/" + char.icon}
+                    alt={char.name}
+                    className="champ-img"
+                  />
                 ) : (
                   char.name.charAt(0)
                 )}
@@ -90,13 +94,22 @@ export function CharacterSelectionView({
           );
         })}
       </div>
+
       {isAdmin && (
-        <div style={{ textAlign: "center", marginTop: "40px" }}>
+        <div style={{ textAlign: "center", marginTop: "40px", display: "flex", justifyContent: "center", gap: "20px" }}>
           <button
             className="pirate-btn admin-btn"
             onClick={() => handleStart()}
           >
             (DM) Spiel starten
+          </button>
+          
+          <button
+            className="pirate-btn"
+            onClick={() => onSelectCharacter({ id: "NEW_CHAR" })}
+            style={{ backgroundColor: "#2d6b45" }}
+          >
+            + Champion erstellen
           </button>
         </div>
       )}

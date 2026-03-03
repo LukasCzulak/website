@@ -5,6 +5,11 @@ Feel free to check it out [here](lukasczulak.de)
 
 For more information: [My email](website@lukasczulak.de)
 
+to test locally:
+- application.properties, do ```spring.cloud.gcp.credentials.location=classpath:service-account-key.json``` instead
+- change API to "http://localhost:8080"
+- backend/./gradlew bootRun
+
 to deploy:
 - npm run build
 - firebase deploy --only hosting
