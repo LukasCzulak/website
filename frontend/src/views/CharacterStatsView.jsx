@@ -8,6 +8,17 @@ function ParsedText({ text }) {
     /(<red>.*?<\/red>|<purple>.*?<\/purple>|<green>.*?<\/green>|<blue>.*?<\/blue>)/g
   );
 
+  const renderWithNewlines = (str) => {
+    const normalizedStr = str.replace(/\\n/g, '\n');
+    
+    return normalizedStr.split('\n').map((line, i, arr) => (
+      <span key={i}>
+        {line}
+        {i !== arr.length - 1 && <br />}
+      </span>
+    ));
+  };
+
   return (
     <span>
       {parts.map((part, index) => {
@@ -15,7 +26,7 @@ function ParsedText({ text }) {
           const innerText = part.replace("<red>", "").replace("</red>", "");
           return (
             <span key={index} style={{ color: "red" }}>
-              {innerText}
+              {renderWithNewlines(innerText)}
             </span>
           );
         }
@@ -24,7 +35,7 @@ function ParsedText({ text }) {
           const innerText = part.replace("<purple>", "").replace("</purple>", "");
           return (
             <span key={index} style={{ color: "purple" }}>
-              {innerText}
+              {renderWithNewlines(innerText)}
             </span>
           );
         }
@@ -33,7 +44,7 @@ function ParsedText({ text }) {
           const innerText = part.replace("<green>", "").replace("</green>", "");
           return (
             <span key={index} style={{ color: "green" }}>
-              {innerText}
+              {renderWithNewlines(innerText)}
             </span>
           );
         }
@@ -42,12 +53,12 @@ function ParsedText({ text }) {
           const innerText = part.replace("<blue>", "").replace("</blue>", "");
           return (
             <span key={index} style={{ color: "blue" }}>
-              {innerText}
+              {renderWithNewlines(innerText)}
             </span>
           );
         }
 
-        return <span key={index}>{part}</span>;
+        return <span key={index}>{renderWithNewlines(part)}</span>;
       })}
     </span>
   );
@@ -91,7 +102,12 @@ export function CharacterStatsView({
   if (!character) return null;
 
   return (
-    <div className="stats-overlay">
+    <div 
+      className="stats-overlay" 
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onCancel();
+      }}
+    >
       <div className="stats-modal">
         <div className="stats-header">
           <div className="stats-icon-large">

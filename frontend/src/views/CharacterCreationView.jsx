@@ -63,7 +63,14 @@ export function CharacterCreationView({ onCancel, onSuccess }) {
       <div className="stats-modal" style={{ maxWidth: "800px", margin: "0 auto" }}>
         <h2 style={{ color: "#c9a473", marginBottom: "20px" }}>Neuen Champion erschaffen</h2>
         
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
+        <form 
+          onSubmit={handleSubmit} 
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+            }
+          }}
+          style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
           
           <div style={{ display: "flex", gap: "10px" }}>
             <input required placeholder="ID (z.B. Graves)" name="id" value={formData.id} onChange={handleChange} className="riot-input" style={{ flex: 1 }} />

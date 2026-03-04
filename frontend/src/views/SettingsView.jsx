@@ -70,7 +70,12 @@ export function SettingsView({
   };
 
   return (
-    <div className="stats-overlay">
+    <div 
+      className="stats-overlay"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onCancel();
+      }}
+    >
       <div
         className="stats-modal"
         style={{ maxWidth: "550px", position: "relative" }}

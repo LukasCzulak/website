@@ -108,7 +108,7 @@ export function Game() {
   return (
     <div className="game-container">
       <div className="game-background" />
-      {!lowPowerMode && currentView !== "settings" && (
+      {!lowPowerMode && (
         <DynamicFog 
           particleLimit={fogLimit} 
           particleLoops={fogLoops} 

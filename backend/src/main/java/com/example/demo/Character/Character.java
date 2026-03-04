@@ -20,7 +20,7 @@ public class Character {
     private String perfect;
     
     private Integer attack_damage;
-    private Integer attack_speed;
+    private Float attack_speed;
     private Integer hitpoints;
     private Map<String, Object> abilities;
 }

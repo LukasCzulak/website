@@ -64,6 +64,12 @@ export function LoginView({ onLogin, currentUser, setCurrentUser, isAdmin, setIs
     }
   }
 
+  const handleKeyDown = (e, action) => {
+    if (e.key === "Enter") {
+      action();
+    }
+  };
+
   return (
     <div className="login-wrapper">
       <div className="login-box">
@@ -77,6 +83,7 @@ export function LoginView({ onLogin, currentUser, setCurrentUser, isAdmin, setIs
                 className="riot-input"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
+                onKeyDown={(e) => handleKeyDown(e, Login)}
               />
             </div>
             <div className="input-group">
@@ -86,6 +93,7 @@ export function LoginView({ onLogin, currentUser, setCurrentUser, isAdmin, setIs
                 className="riot-input"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={(e) => handleKeyDown(e, Login)}
               />
             </div>
             <button
@@ -119,6 +127,7 @@ export function LoginView({ onLogin, currentUser, setCurrentUser, isAdmin, setIs
                 className="riot-input"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
+                onKeyDown={(e) => handleKeyDown(e, onCreate)}
               />
             </div>
             <div className="input-group">
@@ -128,6 +137,7 @@ export function LoginView({ onLogin, currentUser, setCurrentUser, isAdmin, setIs
                 className="riot-input"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={(e) => handleKeyDown(e, onCreate)}
               />
             </div>
             <div className="input-group">
@@ -137,6 +147,7 @@ export function LoginView({ onLogin, currentUser, setCurrentUser, isAdmin, setIs
                 className="riot-input"
                 value={passwordCheck}
                 onChange={(e) => setPasswordCheck(e.target.value)}
+                onKeyDown={(e) => handleKeyDown(e, onCreate)}
               />
             </div>
             <button
