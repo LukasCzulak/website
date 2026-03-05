@@ -23,6 +23,7 @@ export function SettingsView({
   setCurrentView,
   onLogout,
   onAdminStart,
+  setTakenCharIds,
 }) {
   const clientRef = useRef(null);
 
@@ -30,7 +31,7 @@ export function SettingsView({
     const client = new Client({
       brokerURL:
         "wss://" + import.meta.env.VITE_API_URL + "/ws" ||
-        "wss://http://localhost:8080/ws",
+        "ws://localhost:8080/ws",
       reconnectDelay: 5000,
 
       onConnect: () => {
@@ -40,6 +41,24 @@ export function SettingsView({
           console.log("Game started");
           onAdminStart();
         });
+
+        client.subscribe("/topic/chooseCharacter", (payload) => {
+          console.log("character chosen: " + payload.body);
+          try {
+            const updatedTakenChars = JSON.parse(payload.body);
+            setTakenCharIds(updatedTakenChars);
+          } catch (error) {
+            console.error("Fehler beim Parsen der Nachricht:", error);
+          }
+        });
+      },
+
+      onError: (error) => {
+        console.error("WebSocket-Verbindungsfehler:", error);
+      },
+
+      onStompError: (frame) => {
+        console.error("STOMP-Fehler:", frame);
       },
     });
 
@@ -49,7 +68,7 @@ export function SettingsView({
     return () => {
       client.deactivate();
     };
-  }, [onAdminStart]);
+  }, [onAdminStart, setTakenCharIds]);
 
   // save unsaved changes
   const [lowPower, setLowPower] = useState(initialLowPower);
@@ -70,7 +89,7 @@ export function SettingsView({
   };
 
   return (
-    <div 
+    <div
       className="stats-overlay"
       onClick={(e) => {
         if (e.target === e.currentTarget) onCancel();

@@ -9,12 +9,15 @@ export function CharacterSelectionView({
   onAdminStart,
   currentUser,
   isAdmin,
+  setTakenCharIds,
 }) {
   const clientRef = useRef(null);
 
   useEffect(() => {
     const client = new Client({
-      brokerURL: "wss://" + import.meta.env.VITE_API_URL + "/ws" || "wss://http://localhost:8080/ws",
+      brokerURL:
+        "wss://" + import.meta.env.VITE_API_URL + "/ws" ||
+        "ws://localhost:8080/ws",
       reconnectDelay: 5000,
 
       onConnect: () => {
@@ -24,6 +27,24 @@ export function CharacterSelectionView({
           console.log("Game started");
           onAdminStart();
         });
+
+        client.subscribe("/topic/chooseCharacter", (payload) => {
+          console.log("character chosen: " + payload.body);
+          try {
+            const updatedTakenChars = JSON.parse(payload.body);
+            setTakenCharIds(updatedTakenChars);
+          } catch (error) {
+            console.error("Fehler beim Parsen der Nachricht:", error);
+          }
+        });
+      },
+
+      onError: (error) => {
+        console.error("WebSocket-Verbindungsfehler:", error);
+      },
+
+      onStompError: (frame) => {
+        console.error("STOMP-Fehler:", frame);
       },
     });
 
@@ -33,7 +54,7 @@ export function CharacterSelectionView({
     return () => {
       client.deactivate();
     };
-  }, [onAdminStart]);
+  }, [onAdminStart, setTakenCharIds]);
 
   const handleStart = () => {
     const client = clientRef.current;
@@ -96,14 +117,22 @@ export function CharacterSelectionView({
       </div>
 
       {isAdmin && (
-        <div style={{ textAlign: "center", marginTop: "40px", display: "flex", justifyContent: "center", gap: "20px" }}>
+        <div
+          style={{
+            textAlign: "center",
+            marginTop: "40px",
+            display: "flex",
+            justifyContent: "center",
+            gap: "20px",
+          }}
+        >
           <button
             className="pirate-btn admin-btn"
             onClick={() => handleStart()}
           >
             (DM) Spiel starten
           </button>
-          
+
           <button
             className="pirate-btn"
             onClick={() => onSelectCharacter({ id: "NEW_CHAR" })}

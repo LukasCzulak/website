@@ -5,13 +5,13 @@ function ParsedText({ text }) {
   if (!text) return null;
 
   const parts = text.split(
-    /(<red>.*?<\/red>|<purple>.*?<\/purple>|<green>.*?<\/green>|<blue>.*?<\/blue>)/g
+    /(<red>.*?<\/red>|<purple>.*?<\/purple>|<green>.*?<\/green>|<blue>.*?<\/blue>)/g,
   );
 
   const renderWithNewlines = (str) => {
-    const normalizedStr = str.replace(/\\n/g, '\n');
-    
-    return normalizedStr.split('\n').map((line, i, arr) => (
+    const normalizedStr = str.replace(/\\n/g, "\n");
+
+    return normalizedStr.split("\n").map((line, i, arr) => (
       <span key={i}>
         {line}
         {i !== arr.length - 1 && <br />}
@@ -32,7 +32,9 @@ function ParsedText({ text }) {
         }
 
         if (part.startsWith("<purple>") && part.endsWith("</purple>")) {
-          const innerText = part.replace("<purple>", "").replace("</purple>", "");
+          const innerText = part
+            .replace("<purple>", "")
+            .replace("</purple>", "");
           return (
             <span key={index} style={{ color: "purple" }}>
               {renderWithNewlines(innerText)}
@@ -71,14 +73,30 @@ export function CharacterStatsView({
   onCancel,
   onLockIn,
   onAdminStart,
+  takenCharIds,
+  setTakenCharIds,
 }) {
   const clientRef = useRef(null);
+
+  const lockIn = () => {
+    const client = clientRef.current;
+    const takenChars = [...takenCharIds, character];
+
+    if (client?.connected) {
+      client.publish({
+        destination: "/app/chooseCharacter",
+        body: JSON.stringify(takenChars),
+      });
+    }
+
+    onLockIn();
+  };
 
   useEffect(() => {
     const client = new Client({
       brokerURL:
         "wss://" + import.meta.env.VITE_API_URL + "/ws" ||
-        "wss://http://localhost:8080/ws",
+        "ws://localhost:8080/ws",
       reconnectDelay: 5000,
 
       onConnect: () => {
@@ -88,6 +106,24 @@ export function CharacterStatsView({
           console.log("Game started");
           onAdminStart();
         });
+
+        client.subscribe("/topic/chooseCharacter", (payload) => {
+          console.log("character chosen: " + payload.body);
+          try {
+            const updatedTakenChars = JSON.parse(payload.body);
+            setTakenCharIds(updatedTakenChars);
+          } catch (error) {
+            console.error("Fehler beim Parsen der Nachricht:", error);
+          }
+        });
+      },
+
+      onError: (error) => {
+        console.error("WebSocket-Verbindungsfehler:", error);
+      },
+
+      onStompError: (frame) => {
+        console.error("STOMP-Fehler:", frame);
       },
     });
 
@@ -97,13 +133,13 @@ export function CharacterStatsView({
     return () => {
       client.deactivate();
     };
-  }, [onAdminStart]);
+  }, [onAdminStart, setTakenCharIds]);
 
   if (!character) return null;
 
   return (
-    <div 
-      className="stats-overlay" 
+    <div
+      className="stats-overlay"
       onClick={(e) => {
         if (e.target === e.currentTarget) onCancel();
       }}
@@ -146,80 +182,111 @@ export function CharacterStatsView({
               {character.description}
             </p>
 
-            <div style={{ display: "flex", justifyContent: "space-between", marginTop: "15px", padding: "10px", background: "rgba(0,0,0,0.2)", borderRadius: "5px" }}>
-              <span>Leben: <strong>{character.hitpoints}</strong></span>
-              <span>Schaden: <strong>{character.attack_damage}</strong></span>
-              <span>Speed: <strong>{character.attack_speed}</strong></span>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                marginTop: "15px",
+                padding: "10px",
+                background: "rgba(0,0,0,0.2)",
+                borderRadius: "5px",
+              }}
+            >
+              <span>
+                Leben: <strong>{character.hitpoints}</strong>
+              </span>
+              <span>
+                Schaden: <strong>{character.attack_damage}</strong>
+              </span>
+              <span>
+                Speed: <strong>{character.attack_speed}</strong>
+              </span>
             </div>
           </div>
-          
+
           <div className="stats-content-box">
             <div style={{ marginTop: "20px" }}>
-              <strong style={{ color: "#c9a473" }}>Spielstil: </strong> 
+              <strong style={{ color: "#c9a473" }}>Spielstil: </strong>
               <ParsedText text={character.playstyle} />
             </div>
 
             <div style={{ marginTop: "20px" }}>
-              <strong style={{ color: "#c9a473" }}>Perfekt für dich, wenn: </strong> 
+              <strong style={{ color: "#c9a473" }}>
+                Perfekt für dich, wenn:{" "}
+              </strong>
               <ParsedText text={character.perfect} />
             </div>
           </div>
-          
-          
-          <h3 style={{ color: "#c9a473", marginTop: "25px" }}>
-            Fähigkeiten:
-          </h3>
+
+          <h3 style={{ color: "#c9a473", marginTop: "25px" }}>Fähigkeiten:</h3>
 
           <div className="stats-content-box">
             <div style={{ marginTop: "20px" }}>
-              <ul style={{ listStyleType: "none", paddingLeft: 0, marginTop: "10px" }}>
-                
+              <ul
+                style={{
+                  listStyleType: "none",
+                  paddingLeft: 0,
+                  marginTop: "10px",
+                }}
+              >
                 <li style={{ marginBottom: "15px" }}>
-                  <strong style={{ color: "#c9a473" }}>Passive: </strong> 
+                  <strong style={{ color: "#c9a473" }}>Passive: </strong>
                   <ParsedText text={character.abilities?.passive.description} />
                 </li>
-                
+
                 <li style={{ marginBottom: "15px" }}>
                   <strong style={{ color: "#c9a473" }}>
-                    Regulär (CD: {character.abilities?.regular.cooldown}): 
+                    Regulär (CD: {character.abilities?.regular.cooldown}):
                   </strong>{" "}
                   <ParsedText text={character.abilities?.regular.description} />
                 </li>
-                
+
                 <li style={{ marginBottom: "15px" }}>
                   <strong style={{ color: "#c9a473" }}>
-                    Ultimativ (CD: {character.abilities?.ultimate.cooldown}): 
+                    Ultimativ (CD: {character.abilities?.ultimate.cooldown}):
                   </strong>{" "}
-                  <ParsedText text={character.abilities?.ultimate.description} />
+                  <ParsedText
+                    text={character.abilities?.ultimate.description}
+                  />
                 </li>
               </ul>
             </div>
           </div>
 
-          {(character.abilities?.hidden_1.activated || character.abilities?.hidden_2.activated) && (
+          {(character.abilities?.hidden_1.activated ||
+            character.abilities?.hidden_2.activated) && (
             <div>
               <h3 style={{ color: "#c9a473", marginTop: "25px" }}>
                 Versteckt!
               </h3>
-              
-              <div className="stats-content-box"> 
-                <ul style={{ listStyleType: "none", paddingLeft: 0, marginTop: "10px" }}>
-      
+
+              <div className="stats-content-box">
+                <ul
+                  style={{
+                    listStyleType: "none",
+                    paddingLeft: 0,
+                    marginTop: "10px",
+                  }}
+                >
                   {character.abilities?.hidden_1.activated && (
                     <li style={{ marginBottom: "15px" }}>
                       <strong style={{ color: "#c9a473" }}>
-                        Versteckte Fähigkeit 1: 
+                        Versteckte Fähigkeit 1:
                       </strong>{" "}
-                      <ParsedText text={character.abilities?.hidden_1.description} />
+                      <ParsedText
+                        text={character.abilities?.hidden_1.description}
+                      />
                     </li>
                   )}
 
                   {character.abilities?.hidden_2.activated && (
                     <li style={{ marginBottom: "15px" }}>
                       <strong style={{ color: "#c9a473" }}>
-                        Versteckte Fähigkeit 2: 
+                        Versteckte Fähigkeit 2:
                       </strong>{" "}
-                      <ParsedText text={character.abilities?.hidden_2.description} />
+                      <ParsedText
+                        text={character.abilities?.hidden_2.description}
+                      />
                     </li>
                   )}
                 </ul>
@@ -234,7 +301,7 @@ export function CharacterStatsView({
           </button>
 
           {!isTaken && !isMine && (
-            <button className="pirate-btn" onClick={onLockIn}>
+            <button className="pirate-btn" onClick={() => lockIn()}>
               Diesen Wählen!
             </button>
           )}

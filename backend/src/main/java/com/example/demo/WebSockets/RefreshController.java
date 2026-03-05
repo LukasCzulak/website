@@ -17,4 +17,9 @@ public class RefreshController {
     public void triggerStartGame(String payload) {
         messagingTemplate.convertAndSend("/topic/startGame", "startGame");
     }
+
+    @MessageMapping("/chooseCharacter")
+    public void triggerChooseCharacter(String payload) {
+        messagingTemplate.convertAndSend("/topic/chooseCharacter", payload);
+    }
 }

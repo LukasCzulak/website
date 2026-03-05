@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Text, Button, Flex, Title } from "@mantine/core";
+import { Text, Button, Flex, Title, Loader } from "@mantine/core";
 import { getUsers, createUser, requestLogin } from "../api/userService";
 
 export function LoginView({ onLogin, currentUser, setCurrentUser, isAdmin, setIsAdmin }) {
@@ -9,6 +9,7 @@ export function LoginView({ onLogin, currentUser, setCurrentUser, isAdmin, setIs
   const [password, setPassword] = useState("");
   const [passwordCheck, setPasswordCheck] = useState("");
   const [existing, setExisting] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   useEffect(() => {
     getUsers()
       .then(setUsers)
@@ -32,6 +33,7 @@ export function LoginView({ onLogin, currentUser, setCurrentUser, isAdmin, setIs
   };
 
   const Login = async () => {
+    setIsLoggingIn(true);
     try {
       const res = await requestLogin({ username, password });
       console.log(res); // sollte "Login erfolgreich" sein
@@ -42,6 +44,8 @@ export function LoginView({ onLogin, currentUser, setCurrentUser, isAdmin, setIs
         setCurrentUser(username);
         localStorage.setItem("user", username);
         localStorage.setItem("isAdmin", adminFlag);
+        localStorage.setItem("userId", res.userId);
+        localStorage.setItem("isAdmin", res.isAdmin);
         setUsername("");
         setPassword("");
         onLogin();
@@ -49,6 +53,7 @@ export function LoginView({ onLogin, currentUser, setCurrentUser, isAdmin, setIs
         alert("Falscher Benutzername oder Passwort");
       }
     } catch (err) {
+      setIsLoggingIn(false);
       console.error(err.message);
       alert("Falscher Benutzername oder Passwort");
     }
@@ -69,6 +74,18 @@ export function LoginView({ onLogin, currentUser, setCurrentUser, isAdmin, setIs
       action();
     }
   };
+  if (isLoggingIn) {
+      return (
+        <>
+          <Loader color = "#c9a473" size={50} />
+          <div
+            style={{ color: "#c9a473", textAlign: "center", marginTop: "50px" }}
+          >
+            Logge ein...
+          </div>
+        </>
+      );
+    }
 
   return (
     <div className="login-wrapper">

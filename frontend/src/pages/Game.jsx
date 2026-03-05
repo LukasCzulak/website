@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { IconHome, IconSettings } from "@tabler/icons-react";
+import { Loader } from "@mantine/core";
 
 import "./Game.css";
 import { DynamicFog } from "./DynamicFog";
@@ -11,6 +12,7 @@ import { CharacterStatsView } from "../views/CharacterStatsView";
 import { MainGameView } from "../views/MainGameView";
 import { SettingsView } from "../views/SettingsView";
 import { CharacterCreationView } from "../views/CharacterCreationView";
+import { AdminPanel } from "../views/AdminPanel";
 
 import { getCharacters } from "../api/characterService";
 
@@ -30,19 +32,19 @@ export function Game() {
   const [lockedCharId, setLockedCharId] = useState(
     () => localStorage.getItem("lockedCharId") || null,
   ); // locked-in character
-  const [takenCharIds, setTakenCharIds] = useState(["nautilus", "missfortune"]); // von anderen locked-in
-  const [currentUser, setCurrentUser] = useState(
-    () => {
-      const u = localStorage.getItem("user");
-      return u && u !== "null" ? u : "";
-    }
-  );
-  const [isAdmin, setIsAdmin] = useState(
-    () => {
-      const a = localStorage.getItem("isAdmin");
-      return a === "true";
-    }
-  );
+  const [takenCharIds, setTakenCharIds] = useState([]); // von anderen locked-in
+  const [currentUser, setCurrentUser] = useState(() => {
+    const u = localStorage.getItem("user");
+    return u && u !== "null" ? u : "";
+  });
+  const [userId, setUserId] = useState(() => {
+    const id = localStorage.getItem("userId");
+    return id && id !== "null" ? id : "";
+  });
+  const [isAdmin, setIsAdmin] = useState(() => {
+    const a = localStorage.getItem("isAdmin");
+    return a === "true";
+  });
 
   // sync user with storage whenever it changes, remove when empty
   useEffect(() => {
@@ -52,6 +54,14 @@ export function Game() {
       localStorage.removeItem("user");
     }
   }, [currentUser]);
+
+  useEffect(() => {
+    if (userId) {
+      localStorage.setItem("userId", userId);
+    } else {
+      localStorage.removeItem("userId");
+    }
+  }, [userId]);
 
   // move to selection after a successful login
   useEffect(() => {
@@ -102,17 +112,26 @@ export function Game() {
   }, []);
 
   if (isLoadingChars) {
-    return <div style={{ color: "#c9a473", textAlign: "center", marginTop: "50px" }}>Lade Champions aus der Datenbank...</div>;
+    return (
+      <>
+        <Loader color = "#c9a473" size={50} />
+        <div
+          style={{ color: "#c9a473", textAlign: "center", marginTop: "50px" }}
+        >
+          Lade Champions aus der Datenbank...
+        </div>
+      </>
+    );
   }
 
   return (
     <div className="game-container">
       <div className="game-background" />
       {!lowPowerMode && (
-        <DynamicFog 
-          particleLimit={fogLimit} 
-          particleLoops={fogLoops} 
-          initialAmount={fogInitial} 
+        <DynamicFog
+          particleLimit={fogLimit}
+          particleLoops={fogLoops}
+          initialAmount={fogInitial}
         />
       )}
 
@@ -131,16 +150,16 @@ export function Game() {
 
       <button
         onClick={openSettings}
-        style={{ 
-          position: "absolute", 
-          top: 20, 
-          right: 20, 
-          zIndex: 200, 
-          background: "transparent", 
-          border: "none", 
-          color: "#c9a473", 
+        style={{
+          position: "absolute",
+          top: 20,
+          right: 20,
+          zIndex: 200,
+          background: "transparent",
+          border: "none",
+          color: "#c9a473",
           cursor: "pointer",
-          padding: 0
+          padding: 0,
         }}
       >
         <IconSettings size={32} />
@@ -159,6 +178,7 @@ export function Game() {
             onLogin={() => onLogin()}
             currentUser={currentUser}
             setCurrentUser={setCurrentUser}
+            setUserId={setUserId}
             isAdmin={isAdmin}
             setIsAdmin={setIsAdmin}
           />
@@ -177,10 +197,15 @@ export function Game() {
             onAdminStart={() => setCurrentView("game")}
             currentUser={currentUser}
             isAdmin={isAdmin}
+            setTakenCharIds={setTakenCharIds}
           />
         )}
 
-        {currentView === "game" && <MainGameView setCurrentView={setCurrentView} />}
+        {currentView === "game" && (isAdmin ? (
+          <AdminPanel setCurrentView={setCurrentView} />
+        ) : (
+          <MainGameView setCurrentView={setCurrentView} />
+        ))}
       </div>
 
       {currentView === "stats" && viewingChar?.id === "NEW_CHAR" && (
@@ -188,7 +213,7 @@ export function Game() {
           onCancel={() => setCurrentView("selection")}
           onSuccess={() => {
             setCurrentView("selection");
-            window.location.reload(); 
+            window.location.reload();
           }}
         />
       )}
@@ -204,6 +229,8 @@ export function Game() {
             setCurrentView("selection");
           }}
           onAdminStart={() => setCurrentView("game")}
+          takenCharIds={takenCharIds}
+          setTakenCharIds={setTakenCharIds}
         />
       )}
 
@@ -230,6 +257,7 @@ export function Game() {
             setCurrentView("login");
           }}
           onAdminStart={() => setCurrentView("game")}
+          setTakenCharIds={setTakenCharIds}
         />
       )}
     </div>
