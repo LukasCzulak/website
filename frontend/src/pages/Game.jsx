@@ -32,7 +32,7 @@ export function Game() {
   const [lockedCharId, setLockedCharId] = useState(
     () => localStorage.getItem("lockedCharId") || null,
   ); // locked-in character
-  const [takenCharIds, setTakenCharIds] = useState([]); // von anderen locked-in
+  const [takenCharIds, setTakenCharIds] = useState(["Nautilus", "Miss Fortune", "Twisted Fate"]); // von anderen locked-in
   const [currentUser, setCurrentUser] = useState(() => {
     const u = localStorage.getItem("user");
     return u && u !== "null" ? u : "";
@@ -173,7 +173,7 @@ export function Game() {
           paddingTop: "60px",
         }}
       >
-        {currentView === "login" && (
+        {(currentView === "login" || (currentView === "settings" && previousView.current === "login")) && (
           <LoginView
             onLogin={() => onLogin()}
             currentUser={currentUser}
@@ -185,7 +185,9 @@ export function Game() {
         )}
 
         {/* Zeige das Raster an, wenn wir in 'selection' ODER 'stats' sind */}
-        {(currentView === "selection" || currentView === "stats") && (
+        {(currentView === "selection" || 
+          currentView === "stats" || 
+          (currentView === "settings" && (previousView.current === "selection" || previousView.current === "stats"))) && (
           <CharacterSelectionView
             characters={characters}
             lockedCharId={lockedCharId}
@@ -201,10 +203,13 @@ export function Game() {
           />
         )}
 
-        {currentView === "game" && (isAdmin ? (
+        {(currentView === "game" || (currentView === "settings" && previousView.current === "game")) && (isAdmin ? (
           <AdminPanel setCurrentView={setCurrentView} />
         ) : (
-          <MainGameView setCurrentView={setCurrentView} />
+          <MainGameView 
+            setCurrentView={setCurrentView} 
+            character={characters.find(c => c.id === lockedCharId)} 
+          />
         ))}
       </div>
 
