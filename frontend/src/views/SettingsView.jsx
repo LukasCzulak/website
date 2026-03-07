@@ -76,18 +76,31 @@ export function SettingsView({
   const puzzleAreaRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
 
+  // --- LINEARE SONNEN-BERECHNUNG ---
+
+  // Initialisierung: Helligkeit in Winkel umrechnen (Linear)
+  // Wir setzen die Sonne standardmäßig auf die linke Seite.
+  // Unten ist 270°, Links ist 180°, Oben ist 90°
   const [currentAngle, setCurrentAngle] = useState(() => {
-    const targetSin = (brightness / 50) - 1;
-    return Math.PI - Math.asin(targetSin); 
+    const angleDeg = 270 - (brightness / 100) * 180;
+    return (angleDeg * Math.PI) / 180; // Zurück in Bogenmaß für X/Y Berechnung
   });
 
- useEffect(() => {
+  // Externes Update (z.B. Admin drückt "Licht aus")
+  useEffect(() => {
     if (!isDragging) {
-      const expectedBrightness = Math.round((Math.sin(currentAngle) + 1) * 50);
+      // Aktuelle erwartete Helligkeit anhand der visuellen Position berechnen
+      let angleDeg = (currentAngle * 180) / Math.PI;
+      if (angleDeg < 0) angleDeg += 360;
       
+      let distToBottom = Math.abs(angleDeg - 270);
+      if (distToBottom > 180) distToBottom = 360 - distToBottom;
+      const expectedBrightness = Math.round((distToBottom / 180) * 100);
+      
+      // Wenn die echte Helligkeit nicht zur Sonnenposition passt, Sonne verschieben
       if (expectedBrightness !== brightness) {
-        const targetSin = Math.max(-1, Math.min(1, (brightness / 50) - 1));
-        setCurrentAngle(Math.PI - Math.asin(targetSin));
+        const targetDeg = 270 - (brightness / 100) * 180; // Auf die linke Seite zwingen
+        setCurrentAngle((targetDeg * Math.PI) / 180);
       }
     }
   }, [brightness, isDragging, currentAngle]);
@@ -102,17 +115,25 @@ export function SettingsView({
     if (!puzzleAreaRef.current) return;
     const rect = puzzleAreaRef.current.getBoundingClientRect();
     
+    // Position relativ zum Zentrum
     const relX = clientX - (rect.left + arcConfig.centerX);
     const relY = (rect.top + arcConfig.centerY) - clientY;
 
+    // Winkel berechnen und visuelle Sonne direkt dorthin setzen
     const angleRad = Math.atan2(relY, relX);
     setCurrentAngle(angleRad);
 
-    // sin(90°) = 1 -> (1 + 1) * 50 = 100% (Oben)
-    // sin(180°) = 0 -> (0 + 1) * 50 = 50%  (Links)
-    // sin(0°) = 0 -> (0 + 1) * 50 = 50%  (Rechts)
-    // sin(-90°) = -1 -> (-1 + 1) * 50 = 0%  (Unten)
-    const newBrightness = Math.round((Math.sin(angleRad) + 1) * 50);
+    // Winkel in Grad umrechnen (0 bis 360, 0 ist Rechts)
+    let angleDeg = (angleRad * 180) / Math.PI;
+    if (angleDeg < 0) angleDeg += 360;
+
+    // Abstand zum tiefsten Punkt (270°) berechnen
+    let distToBottom = Math.abs(angleDeg - 270);
+    // Da es ein Kreis ist, ist der maximale Abstand 180° (die gegenüberliegende Seite)
+    if (distToBottom > 180) distToBottom = 360 - distToBottom;
+
+    // Lineare Umrechnung: 0° Abstand = 0%, 180° Abstand = 100%
+    const newBrightness = (distToBottom / 180) * 100;
     setBrightness(newBrightness);
   }, [setBrightness, arcConfig.centerX, arcConfig.centerY]);
 
@@ -240,7 +261,7 @@ export function SettingsView({
               <div style={{ marginTop: "15px", display: "flex", flexDirection: "column", alignItems: "center" }}>
                 <Group position="apart" mb="xs" style={{ width: "100%" }}>
                   <Text weight={500}>Bildschirmhelligkeit</Text>
-                  <Text weight={700} c="#c9a473">{brightness}%</Text>
+                  <Text weight={700} c="#c9a473">{Math.round(brightness)}%</Text>
                 </Group>
 
                 {/* Box ist jetzt 300x300 für einen vollen Kreis */}

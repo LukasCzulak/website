@@ -124,10 +124,19 @@ export function Game() {
       </>
     );
   }
-
+  
   const baseBright = 0.05 + (brightness / 100) * 0.95;
-  const extraBright = brightness > 85 ? ((brightness - 85) / 15) * 2 : 0;
+  
+  const overexposureRatio = brightness > 75 ? (brightness - 75) / 25 : 0;
+  
+  const extraBright = Math.pow(overexposureRatio, 2) * 1.5;
+  const extraSepia = Math.pow(overexposureRatio, 2) * 0.4;
+  const extraContrast = Math.pow(overexposureRatio, 2) * 1.2;
+
   const finalCssBrightness = baseBright + extraBright;
+  const finalCssSepia = 0.6 + extraSepia;
+  const finalCssContrast = 1.2 + extraContrast;
+  const overlayOpacity = Math.pow(overexposureRatio, 2) * 0.7;
 
   return (
     <div className="game-container">
@@ -136,10 +145,22 @@ export function Game() {
         style={{
           filter: `
             brightness(${finalCssBrightness}) 
-            sepia(${brightness > 85 ? 0.6 + ((brightness - 85) / 15) * 0.4 : 0.6}) 
-            contrast(${brightness > 85 ? 1.2 + ((brightness - 85) / 15) * 1.5 : 1.2})
+            sepia(${finalCssSepia}) 
+            contrast(${finalCssContrast})
           ` 
         }} 
+      />
+
+      {/* Hohe Helligkeit soll bisschen wehtun */}
+      <div 
+        style={{
+          position: 'fixed',
+          inset: 0,
+          backgroundColor: '#fffae6',
+          opacity: overlayOpacity,
+          pointerEvents: 'none',
+          zIndex: 1,
+        }}
       />
 
       {!lowPowerMode && (
