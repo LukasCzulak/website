@@ -87,6 +87,7 @@ export function SettingsView({
   });
 
   // Externes Update (z.B. Admin drückt "Licht aus")
+  // Externes Update (z.B. Admin drückt "Licht aus")
   useEffect(() => {
     if (!isDragging) {
       // Aktuelle erwartete Helligkeit anhand der visuellen Position berechnen
@@ -95,11 +96,19 @@ export function SettingsView({
       
       let distToBottom = Math.abs(angleDeg - 270);
       if (distToBottom > 180) distToBottom = 360 - distToBottom;
-      const expectedBrightness = Math.round((distToBottom / 180) * 100);
       
-      // Wenn die echte Helligkeit nicht zur Sonnenposition passt, Sonne verschieben
-      if (expectedBrightness !== brightness) {
-        const targetDeg = 270 - (brightness / 100) * 180; // Auf die linke Seite zwingen
+      const expectedBrightness = (distToBottom / 180) * 100; 
+      
+      if (Math.abs(expectedBrightness - brightness) > 1) {
+        const isRightSide = angleDeg < 90 || angleDeg > 270;
+        
+        let targetDeg;
+        if (isRightSide) {
+          targetDeg = 270 + (brightness / 100) * 180;
+        } else {
+          targetDeg = 270 - (brightness / 100) * 180;
+        }
+        
         setCurrentAngle((targetDeg * Math.PI) / 180);
       }
     }
@@ -123,25 +132,30 @@ export function SettingsView({
     const angleRad = Math.atan2(relY, relX);
     setCurrentAngle(angleRad);
 
-    // Winkel in Grad umrechnen (0 bis 360, 0 ist Rechts)
     let angleDeg = (angleRad * 180) / Math.PI;
     if (angleDeg < 0) angleDeg += 360;
 
-    // Abstand zum tiefsten Punkt (270°) berechnen
     let distToBottom = Math.abs(angleDeg - 270);
-    // Da es ein Kreis ist, ist der maximale Abstand 180° (die gegenüberliegende Seite)
     if (distToBottom > 180) distToBottom = 360 - distToBottom;
 
-    // Lineare Umrechnung: 0° Abstand = 0%, 180° Abstand = 100%
     const newBrightness = (distToBottom / 180) * 100;
+    
     setBrightness(newBrightness);
-  }, [setBrightness, arcConfig.centerX, arcConfig.centerY]);
+
+    if (clientRef.current && clientRef.current.connected) {
+      clientRef.current.publish({
+        destination: "/topic/puzzle/brightness", 
+        body: JSON.stringify({ user: currentUser || "Unbekannter Matrose", value: newBrightness }),
+      });
+    }
+
+  }, [setBrightness, arcConfig.centerX, arcConfig.centerY, currentUser]);
 
   const sendBrightnessUpdate = useCallback((val) => {
     if (clientRef.current && clientRef.current.connected) {
       clientRef.current.publish({
-        destination: "/app/puzzle/brightness",
-        body: JSON.stringify({ user: currentUser, value: val }),
+        destination: "/topic/puzzle/brightness", 
+        body: JSON.stringify({ user: currentUser || "Unbekannter Matrose", value: val }),
       });
     }
   }, [currentUser]);
@@ -157,7 +171,7 @@ export function SettingsView({
     const handleGlobalMouseUp = () => {
       if (!isDragging) return;
       setIsDragging(false);
-      sendBrightnessUpdate(brightness);
+      sendBrightnessUpdate(brightness); 
     };
 
     window.addEventListener("mousemove", handleGlobalMouseMove);

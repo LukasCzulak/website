@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { IconHome, IconSettings } from "@tabler/icons-react";
 import { Loader } from "@mantine/core";
+import { Client } from "@stomp/stompjs";
 
 import "./Game.css";
 import { DynamicFog } from "./DynamicFog";
@@ -112,6 +113,41 @@ export function Game() {
       });
   }, []);
 
+  const dimIntervalRef = useRef(null);
+
+  useEffect(() => {
+    if (isAdmin) return;
+
+    const client = new Client({
+      brokerURL: "wss://" + import.meta.env.VITE_API_URL + "/ws" || "ws://localhost:8080/ws",
+      reconnectDelay: 5000,
+      onConnect: () => {
+        client.subscribe("/topic/puzzle/dim", () => {
+          if (dimIntervalRef.current) clearInterval(dimIntervalRef.current);
+
+          dimIntervalRef.current = setInterval(() => {
+            setBrightness((prev) => {
+              const next = prev - 1.6; 
+              
+              if (next <= 0) {
+                clearInterval(dimIntervalRef.current);
+                return 0;
+              }
+              return next;
+            });
+          }, 50);
+        });
+      },
+    });
+
+    client.activate();
+
+    return () => {
+      client.deactivate();
+      if (dimIntervalRef.current) clearInterval(dimIntervalRef.current);
+    };
+  }, [isAdmin]);
+
   if (isLoadingChars) {
     return (
       <>
@@ -124,7 +160,7 @@ export function Game() {
       </>
     );
   }
-  
+
   const baseBright = 0.05 + (brightness / 100) * 0.95;
   
   const overexposureRatio = brightness > 75 ? (brightness - 75) / 25 : 0;
