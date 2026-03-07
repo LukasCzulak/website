@@ -1,0 +1,20 @@
+.sun-puzzle-interactor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  z-index: 10;
+  border-radius: 50%;
+}
+
+.sun-puzzle-interactor:active {
+  cursor: grabbing;
+}
+
+.unselectable {
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}

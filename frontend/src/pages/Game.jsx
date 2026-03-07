@@ -98,6 +98,7 @@ export function Game() {
 
   const [characters, setCharacters] = useState([]);
   const [isLoadingChars, setIsLoadingChars] = useState(true);
+  const [brightness, setBrightness] = useState(50);
 
   useEffect(() => {
     getCharacters()
@@ -124,9 +125,23 @@ export function Game() {
     );
   }
 
+  const baseBright = 0.05 + (brightness / 100) * 0.95;
+  const extraBright = brightness > 85 ? ((brightness - 85) / 15) * 2 : 0;
+  const finalCssBrightness = baseBright + extraBright;
+
   return (
     <div className="game-container">
-      <div className="game-background" />
+      <div 
+        className="game-background" 
+        style={{
+          filter: `
+            brightness(${finalCssBrightness}) 
+            sepia(${brightness > 85 ? 0.6 + ((brightness - 85) / 15) * 0.4 : 0.6}) 
+            contrast(${brightness > 85 ? 1.2 + ((brightness - 85) / 15) * 1.5 : 1.2})
+          ` 
+        }} 
+      />
+
       {!lowPowerMode && (
         <DynamicFog
           particleLimit={fogLimit}
@@ -263,6 +278,8 @@ export function Game() {
           }}
           onAdminStart={() => setCurrentView("game")}
           setTakenCharIds={setTakenCharIds}
+          brightness={brightness}
+          setBrightness={setBrightness}
         />
       )}
     </div>

@@ -1,5 +1,6 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Client } from "@stomp/stompjs";
+import "./SettingsView.css"
 import {
   Switch,
   Slider,
@@ -10,7 +11,7 @@ import {
   ScrollArea,
 } from "@mantine/core";
 
-import { IconAlertTriangle, IconCircleX } from "@tabler/icons-react";
+import { IconAlertTriangle, IconCircleX, IconSun, IconSunFilled } from "@tabler/icons-react";
 
 export function SettingsView({
   initialLowPower,
@@ -24,6 +25,8 @@ export function SettingsView({
   onLogout,
   onAdminStart,
   setTakenCharIds,
+  brightness,
+  setBrightness,
 }) {
   const clientRef = useRef(null);
 
@@ -70,6 +73,91 @@ export function SettingsView({
     };
   }, [onAdminStart, setTakenCharIds]);
 
+  const puzzleAreaRef = useRef(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const [currentAngle, setCurrentAngle] = useState(() => {
+    const targetSin = (brightness / 50) - 1;
+    return Math.PI - Math.asin(targetSin); 
+  });
+
+ useEffect(() => {
+    if (!isDragging) {
+      const expectedBrightness = Math.round((Math.sin(currentAngle) + 1) * 50);
+      
+      if (expectedBrightness !== brightness) {
+        const targetSin = Math.max(-1, Math.min(1, (brightness / 50) - 1));
+        setCurrentAngle(Math.PI - Math.asin(targetSin));
+      }
+    }
+  }, [brightness, isDragging, currentAngle]);
+
+  const arcConfig = {
+    radius: 120,
+    centerX: 150, 
+    centerY: 150,
+  };
+
+  const updateBrightnessFromCoords = useCallback((clientX, clientY) => {
+    if (!puzzleAreaRef.current) return;
+    const rect = puzzleAreaRef.current.getBoundingClientRect();
+    
+    const relX = clientX - (rect.left + arcConfig.centerX);
+    const relY = (rect.top + arcConfig.centerY) - clientY;
+
+    const angleRad = Math.atan2(relY, relX);
+    setCurrentAngle(angleRad);
+
+    // sin(90°) = 1 -> (1 + 1) * 50 = 100% (Oben)
+    // sin(180°) = 0 -> (0 + 1) * 50 = 50%  (Links)
+    // sin(0°) = 0 -> (0 + 1) * 50 = 50%  (Rechts)
+    // sin(-90°) = -1 -> (-1 + 1) * 50 = 0%  (Unten)
+    const newBrightness = Math.round((Math.sin(angleRad) + 1) * 50);
+    setBrightness(newBrightness);
+  }, [setBrightness, arcConfig.centerX, arcConfig.centerY]);
+
+  const sendBrightnessUpdate = useCallback((val) => {
+    if (clientRef.current && clientRef.current.connected) {
+      clientRef.current.publish({
+        destination: "/app/puzzle/brightness",
+        body: JSON.stringify({ user: currentUser, value: val }),
+      });
+    }
+  }, [currentUser]);
+
+  useEffect(() => {
+    const handleGlobalMouseMove = (e) => {
+      if (!isDragging) return;
+      const x = e.touches ? e.touches[0].clientX : e.clientX;
+      const y = e.touches ? e.touches[0].clientY : e.clientY;
+      updateBrightnessFromCoords(x, y);
+    };
+
+    const handleGlobalMouseUp = () => {
+      if (!isDragging) return;
+      setIsDragging(false);
+      sendBrightnessUpdate(brightness);
+    };
+
+    window.addEventListener("mousemove", handleGlobalMouseMove);
+    window.addEventListener("mouseup", handleGlobalMouseUp);
+    window.addEventListener("touchmove", handleGlobalMouseMove);
+    window.addEventListener("touchend", handleGlobalMouseUp);
+
+    return () => {
+      window.removeEventListener("mousemove", handleGlobalMouseMove);
+      window.removeEventListener("mouseup", handleGlobalMouseUp);
+      window.removeEventListener("touchmove", handleGlobalMouseMove);
+      window.removeEventListener("touchend", handleGlobalMouseUp);
+    };
+  }, [isDragging, updateBrightnessFromCoords, sendBrightnessUpdate, brightness]);
+
+  const sunVisualX = arcConfig.centerX + arcConfig.radius * Math.cos(currentAngle);
+  const sunVisualY = arcConfig.centerY - arcConfig.radius * Math.sin(currentAngle); 
+
+  const sunIntensity = brightness / 100;
+
+
   // save unsaved changes
   const [lowPower, setLowPower] = useState(initialLowPower);
   const [limit, setLimit] = useState(initialLimit);
@@ -90,13 +178,13 @@ export function SettingsView({
 
   return (
     <div
-      className="stats-overlay"
+      className={`stats-overlay ${isDragging ? "unselectable" : ""}`}
       onClick={(e) => {
         if (e.target === e.currentTarget) onCancel();
       }}
     >
       <div
-        className="stats-modal"
+        className="stats-modal unselectable" // Verhindert Markierungen während des Dragging
         style={{ maxWidth: "550px", position: "relative" }}
       >
         <Button
@@ -147,6 +235,63 @@ export function SettingsView({
                   color="#c9a473"
                 />
               </Group>
+
+              {/* SONNEN-RÄTSEL KREIS */}
+              <div style={{ marginTop: "15px", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                <Group position="apart" mb="xs" style={{ width: "100%" }}>
+                  <Text weight={500}>Bildschirmhelligkeit</Text>
+                  <Text weight={700} c="#c9a473">{brightness}%</Text>
+                </Group>
+
+                {/* Box ist jetzt 300x300 für einen vollen Kreis */}
+                <div 
+                  ref={puzzleAreaRef}
+                  style={{ position: "relative", width: "300px", height: "300px", marginBottom: "10px" }}
+                >
+                  {/* Voller Kreis aus gestrichelten Linien */}
+                  <svg width="300" height="300" style={{ position: "absolute", top: 0, left: 0 }}>
+                    <circle 
+                      cx="150" 
+                      cy="150" 
+                      r="120" 
+                      fill="transparent" 
+                      stroke="#5c4b37" 
+                      strokeWidth="4" 
+                      strokeDasharray="8 8" 
+                    />
+                  </svg>
+
+                  {/* Die visuelle Sonne */}
+                  <div 
+                    style={{ 
+                      position: "absolute", top: 0, left: 0, width: "40px", height: "40px",
+                      transform: `translate(${sunVisualX - 20}px, ${sunVisualY - 20}px)`, 
+                      transition: isDragging ? "none" : "transform 0.2s ease-out", 
+                      boxShadow: `0 0 ${sunIntensity * 50}px ${sunIntensity * 20}px rgba(255, 215, 0, 0.5)`,
+                      borderRadius: "50%",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      pointerEvents: "none", zIndex: 5
+                    }}
+                  >
+                    <IconSun size={40} color="#c9a473" style={{ position: "absolute" }} />
+                    <IconSunFilled size={40} color="#ffd700" style={{ position: "absolute", opacity: sunIntensity }} />
+                  </div>
+
+                  {/* Interaktor */}
+                  <div 
+                    className="sun-puzzle-interactor"
+                    onMouseDown={(e) => {
+                      setIsDragging(true);
+                      updateBrightnessFromCoords(e.clientX, e.clientY);
+                    }}
+                    onTouchStart={(e) => {
+                      if (e.cancelable) e.preventDefault(); 
+                      setIsDragging(true);
+                      updateBrightnessFromCoords(e.touches[0].clientX, e.touches[0].clientY);
+                    }}
+                  />
+                </div>
+              </div>
 
               <div>
                 <Group position="apart" mb="xs">
