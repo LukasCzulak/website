@@ -33,7 +33,7 @@ export function Game() {
   const [lockedCharId, setLockedCharId] = useState(
     () => localStorage.getItem("lockedCharId") || null,
   ); // locked-in character
-  const [takenCharIds, setTakenCharIds] = useState(["Nautilus", "Miss Fortune", "Twisted Fate"]); // von anderen locked-in
+  const [takenCharIds, setTakenCharIds] = useState([]); // von anderen locked-in
   const [currentUser, setCurrentUser] = useState(() => {
     const u = localStorage.getItem("user");
     return u && u !== "null" ? u : "";

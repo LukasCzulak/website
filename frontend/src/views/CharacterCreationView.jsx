@@ -16,9 +16,9 @@ export function CharacterCreationView({ onCancel, onSuccess }) {
     attack_speed: 1,
     hitpoints: 0,
     abilities: {
-      passive: { description: "" },
-      regular: { cooldown: 0, description: "" },
-      ultimate: { cooldown: -1, description: "" },
+      passive: { description: "", icon: "" },
+      regular: { cooldown: 0, description: "", icon: "" },
+      ultimate: { cooldown: -1, description: "", icon: "" },
       hidden_1: { activated: false, description: "" },
       hidden_2: { activated: false, description: "" },
     },
@@ -95,16 +95,43 @@ export function CharacterCreationView({ onCancel, onSuccess }) {
           <h3 style={{ color: "#c9a473", marginTop: "10px" }}>Fähigkeiten (Mit &lt;red&gt;100&lt;/red&gt; Tags möglich!)</h3>
           
           <textarea placeholder="Passive Beschreibung" value={formData.abilities.passive.description} onChange={(e) => handleAbilityChange("passive", "description", e.target.value)} className="riot-input" rows="2" />
+          <input
+            placeholder="Passive Icon (z.B. graves_passive.png)"
+            value={formData.abilities.passive.icon}
+            onChange={(e) =>
+              handleAbilityChange("passive", "icon", e.target.value)
+            }
+            className="riot-input"
+            style={{ flex: 1 }}
+          />
           
           <div style={{ display: "flex", gap: "10px" }}>
             <input type="number" placeholder="CD" value={formData.abilities.regular.cooldown} onChange={(e) => handleAbilityChange("regular", "cooldown", Number(e.target.value))} className="riot-input" style={{ width: "80px" }} title="Cooldown Regulär" />
             <textarea placeholder="Reguläre Fähigkeit" value={formData.abilities.regular.description} onChange={(e) => handleAbilityChange("regular", "description", e.target.value)} className="riot-input" style={{ flex: 1 }} rows="2" />
           </div>
+          <input
+            placeholder="Regular Icon (z.B. graves_regular.png)"
+            value={formData.abilities.regular.icon}
+            onChange={(e) =>
+              handleAbilityChange("regular", "icon", e.target.value)
+            }
+            className="riot-input"
+            style={{ flex: 1 }}
+          />
 
           <div style={{ display: "flex", gap: "10px" }}>
             <input type="number" placeholder="CD" value={formData.abilities.ultimate.cooldown} onChange={(e) => handleAbilityChange("ultimate", "cooldown", Number(e.target.value))} className="riot-input" style={{ width: "80px" }} title="Cooldown Ultimativ" />
             <textarea placeholder="Ultimative Fähigkeit" value={formData.abilities.ultimate.description} onChange={(e) => handleAbilityChange("ultimate", "description", e.target.value)} className="riot-input" style={{ flex: 1 }} rows="2" />
           </div>
+          <input
+            placeholder="Ultimate Icon (z.B. graves_ultimate.png)"
+            value={formData.abilities.ultimate.icon}
+            onChange={(e) =>
+              handleAbilityChange("ultimate", "icon", e.target.value)
+            }
+            className="riot-input"
+            style={{ flex: 1 }}
+          />
 
           <textarea placeholder="Versteckte Fähigkeit 1 (Optional)" value={formData.abilities.hidden_1.description} onChange={(e) => handleAbilityChange("hidden_1", "description", e.target.value)} className="riot-input" rows="2" />
           <textarea placeholder="Versteckte Fähigkeit 2 (Optional)" value={formData.abilities.hidden_2.description} onChange={(e) => handleAbilityChange("hidden_2", "description", e.target.value)} className="riot-input" rows="2" />
