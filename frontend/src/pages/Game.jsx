@@ -32,7 +32,7 @@ export function Game() {
   const [fogInitial, setFogInitial] = useState(() => {
     const stored = localStorage.getItem("fogInitial");
     return stored ? parseInt(stored, 10) : 5;
- });
+  });
 
   const [currentView, setCurrentView] = useState(() => {
     return localStorage.getItem("currentView") || "login";
@@ -124,13 +124,21 @@ export function Game() {
       });
   }, []);
 
+  useEffect(() => {
+    const takenDoc = characters.find((char) => char.id === "taken");
+    const takenChars = takenDoc ? Object.keys(takenDoc.characters || {}) : [];
+    setTakenCharIds(takenChars);
+  }, [characters]);
+
   const dimIntervalRef = useRef(null);
 
   useEffect(() => {
     if (isAdmin) return;
 
     const client = new Client({
-      brokerURL: "wss://" + import.meta.env.VITE_API_URL + "/ws" || "ws://localhost:8080/ws",
+      brokerURL:
+        "wss://" + import.meta.env.VITE_API_URL + "/ws" ||
+        "ws://localhost:8080/ws",
       reconnectDelay: 5000,
       onConnect: () => {
         client.subscribe("/topic/puzzle/dim", () => {
@@ -138,8 +146,8 @@ export function Game() {
 
           dimIntervalRef.current = setInterval(() => {
             setBrightness((prev) => {
-              const next = prev - 1.6; 
-              
+              const next = prev - 1.6;
+
               if (next <= 0) {
                 clearInterval(dimIntervalRef.current);
                 return 0;
@@ -162,7 +170,7 @@ export function Game() {
   if (isLoadingChars) {
     return (
       <>
-        <Loader color = "#c9a473" size={50} />
+        <Loader color="#c9a473" size={50} />
         <div
           style={{ color: "#c9a473", textAlign: "center", marginTop: "50px" }}
         >
@@ -173,9 +181,9 @@ export function Game() {
   }
 
   const baseBright = 0.05 + (brightness / 100) * 0.95;
-  
+
   const overexposureRatio = brightness > 75 ? (brightness - 75) / 25 : 0;
-  
+
   const extraBright = Math.pow(overexposureRatio, 2) * 1.5;
   const extraSepia = Math.pow(overexposureRatio, 2) * 0.4;
   const extraContrast = Math.pow(overexposureRatio, 2) * 1.2;
@@ -187,25 +195,25 @@ export function Game() {
 
   return (
     <div className="game-container">
-      <div 
-        className="game-background" 
+      <div
+        className="game-background"
         style={{
           filter: `
             brightness(${finalCssBrightness}) 
             sepia(${finalCssSepia}) 
             contrast(${finalCssContrast})
-          ` 
-        }} 
+          `,
+        }}
       />
 
       {/* Hohe Helligkeit soll bisschen wehtun */}
-      <div 
+      <div
         style={{
-          position: 'fixed',
+          position: "fixed",
           inset: 0,
-          backgroundColor: '#fffae6',
+          backgroundColor: "#fffae6",
           opacity: overlayOpacity,
-          pointerEvents: 'none',
+          pointerEvents: "none",
           zIndex: 1,
         }}
       />
@@ -256,7 +264,8 @@ export function Game() {
           paddingTop: "60px",
         }}
       >
-        {(currentView === "login" || (currentView === "settings" && previousView.current === "login")) && (
+        {(currentView === "login" ||
+          (currentView === "settings" && previousView.current === "login")) && (
           <LoginView
             onLogin={() => onLogin()}
             currentUser={currentUser}
@@ -268,9 +277,11 @@ export function Game() {
         )}
 
         {/* Zeige das Raster an, wenn wir in 'selection' ODER 'stats' sind */}
-        {(currentView === "selection" || 
-          currentView === "stats" || 
-          (currentView === "settings" && (previousView.current === "selection" || previousView.current === "stats"))) && (
+        {(currentView === "selection" ||
+          currentView === "stats" ||
+          (currentView === "settings" &&
+            (previousView.current === "selection" ||
+              previousView.current === "stats"))) && (
           <CharacterSelectionView
             characters={characters}
             lockedCharId={lockedCharId}
@@ -286,14 +297,16 @@ export function Game() {
           />
         )}
 
-        {(currentView === "game" || (currentView === "settings" && previousView.current === "game")) && (isAdmin ? (
-          <AdminPanel setCurrentView={setCurrentView} />
-        ) : (
-          <MainGameView 
-            setCurrentView={setCurrentView} 
-            character={characters.find(c => c.id === lockedCharId)} 
-          />
-        ))}
+        {(currentView === "game" ||
+          (currentView === "settings" && previousView.current === "game")) &&
+          (isAdmin ? (
+            <AdminPanel setCurrentView={setCurrentView} />
+          ) : (
+            <MainGameView
+              setCurrentView={setCurrentView}
+              character={characters.find((c) => c.id === lockedCharId)}
+            />
+          ))}
       </div>
 
       {currentView === "stats" && viewingChar?.id === "NEW_CHAR" && (
@@ -319,6 +332,7 @@ export function Game() {
           onAdminStart={() => setCurrentView("game")}
           takenCharIds={takenCharIds}
           setTakenCharIds={setTakenCharIds}
+          getCharacters={getCharacters}
         />
       )}
 
@@ -330,12 +344,12 @@ export function Game() {
           initialInitial={fogInitial}
           onCancel={closeSettings}
           onApply={(newPower, newLimit, newLoops, newInitial) => {
-          // Update State
+            // Update State
             setLowPowerMode(newPower);
             setFogLimit(newLimit);
             setFogLoops(newLoops);
             setFogInitial(newInitial);
-                
+
             // Save to LocalStorage
             localStorage.setItem("lowPowerMode", newPower);
             localStorage.setItem("fogLimit", newLimit);

@@ -1,12 +1,11 @@
 package com.example.demo.Character;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/characters")
@@ -26,5 +25,11 @@ public class CharacterController {
     @PostMapping
     public Mono<Character> createCharacter(@RequestBody Character character) {
         return characterService.saveCharacter(character);
+    }
+
+    @PutMapping("/taken")
+    public ResponseEntity<?> updateTaken(@RequestBody Map<String, Object> data) {
+        characterService.updateTaken(data);
+        return ResponseEntity.ok().build();
     }
 }

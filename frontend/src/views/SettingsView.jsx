@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Client } from "@stomp/stompjs";
+import { getCharacters } from "../api/characterService";
 import "./SettingsView.css"
 import {
   Switch,
@@ -45,14 +46,18 @@ export function SettingsView({
           onAdminStart();
         });
 
-        client.subscribe("/topic/chooseCharacter", (payload) => {
-          console.log("character chosen: " + payload.body);
-          try {
-            const updatedTakenChars = JSON.parse(payload.body);
-            setTakenCharIds(updatedTakenChars);
-          } catch (error) {
-            console.error("Fehler beim Parsen der Nachricht:", error);
-          }
+        client.subscribe("/topic/chooseCharacter", () => {
+          getCharacters()
+            .then((chars) => {
+              const takenDoc = chars.find((c) => c.id === "taken");
+              const takenChars = takenDoc
+                ? Object.keys(takenDoc.characters || {})
+                : [];
+              setTakenCharIds(takenChars);
+            })
+            .catch((error) => {
+              console.error("Fehler beim Laden der Charaktere:", error);
+            });
         });
       },
 

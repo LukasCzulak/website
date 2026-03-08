@@ -14,9 +14,23 @@ export async function createCharacter(characterData) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(characterData),
   });
-  
+
   if (!res.ok) {
     throw new Error("Failed to create character");
   }
   return res.json();
+}
+
+export async function updateTakenChars(data) {
+  const res = await fetch(`${API_URL}/api/characters/taken`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to update taken characters");
+  }
+
+  return true;
 }

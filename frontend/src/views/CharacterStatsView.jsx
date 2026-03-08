@@ -1,6 +1,7 @@
 import { useRef, useEffect } from "react";
 import { ParsedText } from "../utils/ParsedText";
 import { Client } from "@stomp/stompjs";
+import { updateTakenChars } from "../api/characterService";
 
 export function CharacterStatsView({
   character,
@@ -11,21 +12,52 @@ export function CharacterStatsView({
   onAdminStart,
   takenCharIds,
   setTakenCharIds,
+  getCharacters,
 }) {
   const clientRef = useRef(null);
+  const previousChar = character;
 
-  const lockIn = () => {
+  // keep a ref so we can remember what was locked in before clicking again
+  const previousCharRef = useRef(character);
+
+  const lockIn = async () => {
     const client = clientRef.current;
-    const takenChars = [...takenCharIds, character];
+    const previousId = previousCharRef.current?.id;
+
+    // start with the current list and only modify what changed
+    let newTaken = [...takenCharIds];
+
+    // if the user had a different character locked before, remove it
+    if (previousId && previousId !== character.id) {
+      newTaken = newTaken.filter((id) => id !== previousId);
+    }
+
+    // add the new id if not already present
+    if (!newTaken.includes(character.id)) {
+      newTaken.push(character.id);
+    }
+
+    // build payload exactly like the backend expects
+    const data = {
+      characters: Object.fromEntries(newTaken.map((id) => [id, ""])),
+    };
+
+    try {
+      await updateTakenChars(data); // await so we can catch errors
+      setTakenCharIds(newTaken); // update local state immediately
+    } catch (err) {
+      console.error("konnte taken chars nicht aktualisieren:", err);
+    }
 
     if (client?.connected) {
       client.publish({
         destination: "/app/chooseCharacter",
-        body: JSON.stringify(takenChars),
+        body: JSON.stringify("update"),
       });
     }
 
     onLockIn();
+    previousCharRef.current = character; // remember for the next call
   };
 
   useEffect(() => {
@@ -43,14 +75,22 @@ export function CharacterStatsView({
           onAdminStart();
         });
 
-        client.subscribe("/topic/chooseCharacter", (payload) => {
-          console.log("character chosen: " + payload.body);
-          try {
-            const updatedTakenChars = JSON.parse(payload.body);
-            setTakenCharIds(updatedTakenChars);
-          } catch (error) {
-            console.error("Fehler beim Parsen der Nachricht:", error);
-          }
+        client.subscribe("/topic/chooseCharacter", () => {
+          // when someone else picks a champ, refresh the list so
+          // `takenCharIds` in Game.jsx is updated; the prop is a
+          // function so we have to call it and then propagate the
+          // result ourselves.
+          getCharacters()
+            .then((chars) => {
+              const takenDoc = chars.find((c) => c.id === "taken");
+              const takenChars = takenDoc
+                ? Object.keys(takenDoc.characters || {})
+                : [];
+              setTakenCharIds(takenChars);
+            })
+            .catch((error) => {
+              console.error("Fehler beim Laden der Charaktere:", error);
+            });
         });
       },
 

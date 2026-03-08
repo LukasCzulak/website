@@ -1,9 +1,13 @@
 package com.example.demo.Character;
 
+import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.Firestore;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.Map;
+
 @Service
 public class CharacterService {
 
@@ -35,5 +39,16 @@ public class CharacterService {
                     .get();
             return character;
         });
+    }
+
+    public void updateTaken(Map<String, Object> data) {
+        try {
+            firestore.collection(COLLECTION_NAME)
+                    .document("taken")
+                    .set(data)
+                    .get();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

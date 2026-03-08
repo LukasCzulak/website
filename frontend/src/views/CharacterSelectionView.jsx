@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Client } from "@stomp/stompjs";
+import { getCharacters } from "../api/characterService";
 
 export function CharacterSelectionView({
   characters,
@@ -28,14 +29,18 @@ export function CharacterSelectionView({
           onAdminStart();
         });
 
-        client.subscribe("/topic/chooseCharacter", (payload) => {
-          console.log("character chosen: " + payload.body);
-          try {
-            const updatedTakenChars = JSON.parse(payload.body);
-            setTakenCharIds(updatedTakenChars);
-          } catch (error) {
-            console.error("Fehler beim Parsen der Nachricht:", error);
-          }
+        client.subscribe("/topic/chooseCharacter", () => {
+          getCharacters()
+            .then((chars) => {
+              const takenDoc = chars.find((c) => c.id === "taken");
+              const takenChars = takenDoc
+                ? Object.keys(takenDoc.characters || {})
+                : [];
+              setTakenCharIds(takenChars);
+            })
+            .catch((error) => {
+              console.error("Fehler beim Laden der Charaktere:", error);
+            });
         });
       },
 
@@ -83,35 +88,37 @@ export function CharacterSelectionView({
       <div className="champ-grid">
         {characters.map((char) => {
           const isMine = lockedCharId === char.id;
-          const isTaken = takenCharIds.includes(char.id);
+          const isTaken = takenCharIds ? takenCharIds.includes(char.id) : [];
 
           let statusClass = "status-neutral";
           if (isMine) statusClass = "status-mine";
           else if (isTaken) statusClass = "status-taken";
 
           return (
-            <div
-              key={char.id}
-              className={`champ-icon-container ${statusClass}`}
-              onClick={() => onSelectCharacter(char)}
-            >
-              <div className="champ-icon-circle">
-                {char.icon ? (
-                  <img
-                    src={"/icons/" + char.icon}
-                    alt={char.name || "Unknown"}
-                    className="champ-img"
-                  />
-                ) : (
-                  (char.name || "?").charAt(0) 
+            char.id !== "taken" && (
+              <div
+                key={char.id}
+                className={`champ-icon-container ${statusClass}`}
+                onClick={() => onSelectCharacter(char)}
+              >
+                <div className="champ-icon-circle">
+                  {char.icon ? (
+                    <img
+                      src={"/icons/" + char.icon}
+                      alt={char.name}
+                      className="champ-img"
+                    />
+                  ) : (
+                    char.name.charAt(0)
+                  )}
+                </div>
+                <span className="champ-name">{char.name}</span>
+
+                {isTaken && !isMine && (
+                  <span className="taken-label">Vergeben</span>
                 )}
               </div>
-              <span className="champ-name">{char.name}</span>
-
-              {isTaken && !isMine && (
-                <span className="taken-label">Vergeben</span>
-              )}
-            </div>
+            )
           );
         })}
       </div>

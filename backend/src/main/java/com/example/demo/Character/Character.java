@@ -23,4 +23,6 @@ public class Character {
     private Float attack_speed;
     private Integer hitpoints;
     private Map<String, Object> abilities;
+
+    private Map<String, Object> characters;
 }
