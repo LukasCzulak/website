@@ -18,10 +18,21 @@ import { AdminPanel } from "../views/AdminPanel";
 import { getCharacters } from "../api/characterService";
 
 export function Game() {
-  const [lowPowerMode, setLowPowerMode] = useState(false);
-  const [fogLimit, setFogLimit] = useState(25);
-  const [fogLoops, setFogLoops] = useState(3);
-  const [fogInitial, setFogInitial] = useState(5);
+  const [lowPowerMode, setLowPowerMode] = useState(() => {
+    return localStorage.getItem("lowPowerMode") === "true";
+  });
+  const [fogLimit, setFogLimit] = useState(() => {
+    const stored = localStorage.getItem("fogLimit");
+    return stored ? parseInt(stored, 10) : 25;
+  });
+  const [fogLoops, setFogLoops] = useState(() => {
+    const stored = localStorage.getItem("fogLoops");
+    return stored ? parseInt(stored, 10) : 3;
+  });
+  const [fogInitial, setFogInitial] = useState(() => {
+    const stored = localStorage.getItem("fogInitial");
+    return stored ? parseInt(stored, 10) : 5;
+ });
 
   const [currentView, setCurrentView] = useState(() => {
     return localStorage.getItem("currentView") || "login";
@@ -319,10 +330,18 @@ export function Game() {
           initialInitial={fogInitial}
           onCancel={closeSettings}
           onApply={(newPower, newLimit, newLoops, newInitial) => {
+          // Update State
             setLowPowerMode(newPower);
             setFogLimit(newLimit);
             setFogLoops(newLoops);
             setFogInitial(newInitial);
+                
+            // Save to LocalStorage
+            localStorage.setItem("lowPowerMode", newPower);
+            localStorage.setItem("fogLimit", newLimit);
+            localStorage.setItem("fogLoops", newLoops);
+            localStorage.setItem("fogInitial", newInitial);
+
             closeSettings();
           }}
           currentUser={currentUser}

@@ -413,6 +413,14 @@ export function SettingsView({
 
             <button
               className="pirate-btn"
+              style={{ background: "#5c4b37", color: "white" }}
+              onClick={() => onApply(false, 25, 3, 5)}
+            >
+              Standard
+            </button>
+
+            <button
+              className="pirate-btn"
               onClick={() => onApply(lowPower, limit, loops, initialParticles)}
             >
               Übernehmen
