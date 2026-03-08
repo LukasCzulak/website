@@ -5,63 +5,13 @@ const random = (min, max) => Math.random() * (max - min) + min;
 
 export function DynamicFog({ particleLimit = 25, initialAmount = 5, particleLoops = 3 }) {
   const [particles, setParticles] = useState([]);
-  const [cachedImages, setCachedImages] = useState([]);
-  const isSpawning = useRef(false);
+  const images = ['/fog_white.webp', 
+    '/fog_grey.webp', 
+    '/fog_light_green.webp',
+    '/fog_dark_green.webp',
+    '/fog_light_blue.webp',
+    '/fog_dark_blue.webp']
 
-  useEffect(() => {
-    const generateImages = async () => {
-      const img = new Image();
-      img.src = '/fog_better.webp';
-
-      await new Promise(resolve => { img.onload = resolve; });
-
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      canvas.width = img.width;
-      canvas.height = img.height;
-
-      const variations = [];
-      
-      // 1. original
-      ctx.filter = 'none';
-      ctx.drawImage(img, 0, 0);
-      variations.push(canvas.toDataURL('image/webp'));
-
-      // 2. light green
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.filter = 'sepia(0.8) hue-rotate(80deg) saturate(150%)';
-      ctx.drawImage(img, 0, 0);
-      variations.push(canvas.toDataURL('image/webp'));
-
-      // 3. light green
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.filter = 'sepia(0.8) hue-rotate(80deg) saturate(150%)';
-      ctx.drawImage(img, 0, 0);
-      variations.push(canvas.toDataURL('image/webp'));
-
-      // 4. deep toxic green
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.filter = 'sepia(1) hue-rotate(100deg) saturate(300%)';
-      ctx.drawImage(img, 0, 0);
-      variations.push(canvas.toDataURL('image/webp'));
-
-      // 5. light sea blue
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.filter = 'sepia(0.8) hue-rotate(170deg) saturate(200%)'; 
-      ctx.drawImage(img, 0, 0);
-      variations.push(canvas.toDataURL('image/webp'));
-
-      // 6. icy cold threatening blue
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.filter = 'sepia(1) hue-rotate(210deg) saturate(250%) contrast(1.2) brightness(0.9)';
-      ctx.drawImage(img, 0, 0);
-      variations.push(canvas.toDataURL('image/webp'));
-
-      setCachedImages(variations);
-    };
-
-    generateImages();
-  }, []);
 
   const spawnParticle = useCallback((isInitial = false) => {
     setParticles((prev) => {
@@ -112,28 +62,24 @@ export function DynamicFog({ particleLimit = 25, initialAmount = 5, particleLoop
   }, [particleLimit]);
 
   useEffect(() => {
-    if (cachedImages.length > 0 && !isSpawning.current && particleLimit > 0) {
-      isSpawning.current = true;
-      
-      const initial = initialAmount; 
-      const loops = particleLoops; 
+    if (particleLimit > 0) {
       
       for (let i = 0; i < initialAmount; i++) {
         spawnParticle(true); 
       }
       
-      for (let i = 0; i < loops; i++) {
+      for (let i = 0; i < particleLoops; i++) {
         spawnParticle(false);
       }
     }
-  }, [spawnParticle, cachedImages, particleLimit, particleLoops]);
+  }, [spawnParticle, particleLimit, particleLoops]);
 
-  if (cachedImages.length === 0 || particleLimit === 0) return null;
+  if (particleLimit === 0) return null;
 
   return (
     <div className="dynamic-fog-container">
       {particles.map((p) => {
-        const savedImage = cachedImages[p.imageIndex];
+        const savedImage = images[p.imageIndex];
         
         return (
           <div
