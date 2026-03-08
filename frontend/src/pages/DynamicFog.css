@@ -17,8 +17,6 @@
   background-position: center;
   background-repeat: no-repeat;
   
-  mix-blend-mode: screen;
-  
   animation-duration: var(--duration);
   animation-timing-function: linear;
   animation-fill-mode: forwards;
