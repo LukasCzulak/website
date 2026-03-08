@@ -22,7 +22,7 @@ export function ParsedText({ text }) {
         if (part.startsWith("<red>") && part.endsWith("</red>")) {
           const innerText = part.replace("<red>", "").replace("</red>", "");
           return (
-            <span key={index} style={{ color: "red" }}>
+            <span key={index} style={{ color: "#ff0000" }}>
               {renderWithNewlines(innerText)}
             </span>
           );
@@ -33,7 +33,7 @@ export function ParsedText({ text }) {
             .replace("<purple>", "")
             .replace("</purple>", "");
           return (
-            <span key={index} style={{ color: "purple" }}>
+            <span key={index} style={{ color: "#9424d5" }}>
               {renderWithNewlines(innerText)}
             </span>
           );
@@ -42,7 +42,7 @@ export function ParsedText({ text }) {
         if (part.startsWith("<green>") && part.endsWith("</green>")) {
           const innerText = part.replace("<green>", "").replace("</green>", "");
           return (
-            <span key={index} style={{ color: "green" }}>
+            <span key={index} style={{ color: "#26bd26" }}>
               {renderWithNewlines(innerText)}
             </span>
           );
@@ -51,7 +51,7 @@ export function ParsedText({ text }) {
         if (part.startsWith("<blue>") && part.endsWith("</blue>")) {
           const innerText = part.replace("<blue>", "").replace("</blue>", "");
           return (
-            <span key={index} style={{ color: "blue" }}>
+            <span key={index} style={{ color: "#00a2ff" }}>
               {renderWithNewlines(innerText)}
             </span>
           );
