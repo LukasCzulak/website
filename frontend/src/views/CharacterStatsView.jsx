@@ -73,6 +73,68 @@ export function CharacterStatsView({
 
   if (!character) return null;
 
+  const renderAbility = (title, ability, isHidden = false) => {
+    if (!ability || (isHidden && !ability.activated)) return null;
+
+    return (
+      <div style={{ display: "flex", gap: "15px", alignItems: "flex-start", marginBottom: "20px" }}>
+        <div style={{
+          position: "relative",
+          width: "60px",
+          height: "60px",
+          borderRadius: "6px",
+          border: "2px solid #555",
+          background: "#2a2a2a",
+          flexShrink: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center"
+        }}>
+          {ability.icon ? (
+            <img 
+              src={"/abilities/" + ability.icon} 
+              alt={title} 
+              style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "4px" }} 
+            />
+          ) : (
+            <span style={{ fontSize: "1.5rem", fontWeight: "bold", color: "#777" }}>
+              {title.charAt(0)}
+            </span>
+          )}
+          
+          {ability.cooldown > 0 && (
+            <div style={{
+              position: "absolute",
+              bottom: "-6px",
+              right: "-6px",
+              background: "#111",
+              border: "1px solid #c9a473",
+              color: "#e6c898",
+              width: "22px",
+              height: "22px",
+              borderRadius: "50%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "0.75rem",
+              fontWeight: "bold",
+              boxShadow: "0 2px 4px rgba(0,0,0,0.8)"
+            }}>
+              {ability.cooldown}
+            </div>
+          )}
+        </div>
+
+        <div>
+          <strong style={{ color: "#c9a473", display: "block", marginBottom: "4px" }}>
+            {title}
+          </strong>
+          <ParsedText text={ability.description} />
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div
       className="stats-overlay"
@@ -80,7 +142,8 @@ export function CharacterStatsView({
         if (e.target === e.currentTarget) onCancel();
       }}
     >
-      <div className="stats-modal">
+      {/* Max Width increased to 800px for a wider layout */}
+      <div className="stats-modal" style={{ maxWidth: "690px", width: "90%" }}>
         <div className="stats-header">
           <div className="stats-icon-large">
             {character.icon ? (
@@ -154,78 +217,24 @@ export function CharacterStatsView({
             </div>
           </div>
 
-          <h3 style={{ color: "#c9a473", marginTop: "25px" }}>Fähigkeiten:</h3>
+          <h3 style={{ color: "#c9a473", marginTop: "25px", marginBottom: "15px" }}>Fähigkeiten:</h3>
 
-          <div className="stats-content-box">
-            <div style={{ marginTop: "20px" }}>
-              <ul
-                style={{
-                  listStyleType: "none",
-                  paddingLeft: 0,
-                  marginTop: "10px",
-                }}
-              >
-                <li style={{ marginBottom: "15px" }}>
-                  <strong style={{ color: "#c9a473" }}>Passive: </strong>
-                  <ParsedText text={character.abilities?.passive.description} />
-                </li>
-
-                <li style={{ marginBottom: "15px" }}>
-                  <strong style={{ color: "#c9a473" }}>
-                    Regulär (CD: {character.abilities?.regular.cooldown}):
-                  </strong>{" "}
-                  <ParsedText text={character.abilities?.regular.description} />
-                </li>
-
-                <li style={{ marginBottom: "15px" }}>
-                  <strong style={{ color: "#c9a473" }}>
-                    Ultimativ (CD: {character.abilities?.ultimate.cooldown}):
-                  </strong>{" "}
-                  <ParsedText
-                    text={character.abilities?.ultimate.description}
-                  />
-                </li>
-              </ul>
-            </div>
+          <div className="stats-content-box" style={{ padding: "20px" }}>
+            {renderAbility("Passive", character.abilities?.passive)}
+            {renderAbility("Regulär", character.abilities?.regular)}
+            {renderAbility("Ultimativ", character.abilities?.ultimate)}
           </div>
 
-          {(character.abilities?.hidden_1.activated ||
-            character.abilities?.hidden_2.activated) && (
+          {(character.abilities?.hidden_1?.activated ||
+            character.abilities?.hidden_2?.activated) && (
             <div>
-              <h3 style={{ color: "#c9a473", marginTop: "25px" }}>
+              <h3 style={{ color: "#c9a473", marginTop: "25px", marginBottom: "15px" }}>
                 Versteckt!
               </h3>
 
-              <div className="stats-content-box">
-                <ul
-                  style={{
-                    listStyleType: "none",
-                    paddingLeft: 0,
-                    marginTop: "10px",
-                  }}
-                >
-                  {character.abilities?.hidden_1.activated && (
-                    <li style={{ marginBottom: "15px" }}>
-                      <strong style={{ color: "#c9a473" }}>
-                        Versteckte Fähigkeit 1:
-                      </strong>{" "}
-                      <ParsedText
-                        text={character.abilities?.hidden_1.description}
-                      />
-                    </li>
-                  )}
-
-                  {character.abilities?.hidden_2.activated && (
-                    <li style={{ marginBottom: "15px" }}>
-                      <strong style={{ color: "#c9a473" }}>
-                        Versteckte Fähigkeit 2:
-                      </strong>{" "}
-                      <ParsedText
-                        text={character.abilities?.hidden_2.description}
-                      />
-                    </li>
-                  )}
-                </ul>
+              <div className="stats-content-box" style={{ padding: "20px" }}>
+                {renderAbility("Versteckte Fähigkeit 1", character.abilities?.hidden_1, true)}
+                {renderAbility("Versteckte Fähigkeit 2", character.abilities?.hidden_2, true)}
               </div>
             </div>
           )}
