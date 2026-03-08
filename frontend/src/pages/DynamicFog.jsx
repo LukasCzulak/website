@@ -5,21 +5,24 @@ const random = (min, max) => Math.random() * (max - min) + min;
 
 export function DynamicFog({ particleLimit = 25, initialAmount = 5, particleLoops = 3 }) {
   const [particles, setParticles] = useState([]);
-  const images = ['/fog_white.webp', 
+  
+  const activeCount = useRef(0);
+  const timeoutIds = useRef(new Set());
+  
+  const images = [
+    '/fog_white.webp', 
     '/fog_grey.webp', 
     '/fog_light_green.webp',
     '/fog_dark_green.webp',
     '/fog_light_blue.webp',
-    '/fog_dark_blue.webp']
-
+    '/fog_dark_blue.webp'
+  ];
 
   const spawnParticle = useCallback((isInitial = false) => {
-    setParticles((prev) => {
-      if (prev.length >= particleLimit) return prev;
-      return prev;
-    });
+    if (activeCount.current >= particleLimit) return;
 
-    // random id
+    activeCount.current += 1;
+
     const id = Math.random().toString(36).substring(2, 9);
 
     // random duration 30 - 60 seconds
@@ -36,43 +39,46 @@ export function DynamicFog({ particleLimit = 25, initialAmount = 5, particleLoop
     const startY = random(-50, 150);
     const endX = random(-50, 150);
     const endY = random(-50, 150);
-
-    const rotation = random(0, 0); // rotation ??
-
-    const imageIndex = Math.floor(Math.random() * 6); // 0-5
+    const rotation = random(0, 0);
+    const imageIndex = Math.floor(Math.random() * 6);
 
     const newParticle = {
       id, isInitial, duration, size, maxOpacity, startX, startY, endX, endY, rotation, imageIndex
     };
-    
 
-    setParticles((prev) => {
-      if (prev.length >= particleLimit) return prev;
-      return [...prev, newParticle];
-    });
+    setParticles((prev) => [...prev, newParticle]);
 
-    setTimeout(() => {
+    const removeTimeout = setTimeout(() => {
       setParticles((prev) => prev.filter((p) => p.id !== id));
+      activeCount.current -= 1;
+      timeoutIds.current.delete(removeTimeout);
+      
+      if (activeCount.current < particleLimit) {
+         spawnParticle(false);
+      }
     }, duration * 1000);
-
-    if (!isInitial) {
-      const nextSpawnTime = random(5, 10) * 1000; // spawn next one in 5-10 seconds
-      setTimeout(() => spawnParticle(false), nextSpawnTime);
-    }
+    
+    timeoutIds.current.add(removeTimeout);
   }, [particleLimit]);
 
   useEffect(() => {
+    timeoutIds.current.forEach(clearTimeout);
+    timeoutIds.current.clear();
+    setParticles([]);
+    activeCount.current = 0;
+
     if (particleLimit > 0) {
-      
-      for (let i = 0; i < initialAmount; i++) {
-        spawnParticle(true); 
-      }
-      
-      for (let i = 0; i < particleLoops; i++) {
-        spawnParticle(false);
+      const totalToSpawn = Math.min(particleLimit, initialAmount + particleLoops);
+      for (let i = 0; i < totalToSpawn; i++) {
+        spawnParticle(i < initialAmount); 
       }
     }
-  }, [spawnParticle, particleLimit, particleLoops]);
+
+    return () => {
+      timeoutIds.current.forEach(clearTimeout);
+      timeoutIds.current.clear();
+    };
+  }, [spawnParticle, particleLimit, initialAmount, particleLoops]);
 
   if (particleLimit === 0) return null;
 

@@ -99,11 +99,11 @@ export function CharacterSelectionView({
                 {char.icon ? (
                   <img
                     src={"/icons/" + char.icon}
-                    alt={char.name}
+                    alt={char.name || "Unknown"}
                     className="champ-img"
                   />
                 ) : (
-                  char.name.charAt(0)
+                  (char.name || "?").charAt(0) 
                 )}
               </div>
               <span className="champ-name">{char.name}</span>
