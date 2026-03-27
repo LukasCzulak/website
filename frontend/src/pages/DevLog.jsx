@@ -10,9 +10,6 @@ export function DevLog() {
       <h1>DevLog</h1>
       <p>
         Please have a look at the following projects: <br />
-          <Link to="/czzrenderer">
-            <button>CzzRenderer</button>
-          </Link>
           <Link to="/bigint">
             <button>BigInt</button>
           </Link>
