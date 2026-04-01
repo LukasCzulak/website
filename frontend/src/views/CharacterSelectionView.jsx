@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
-import { Client } from "@stomp/stompjs";
 import { getCharacters } from "../api/characterService";
+import { useWebSocket } from "../utils/WebSocketContext";
 
 export function CharacterSelectionView({
   characters,
@@ -12,63 +12,33 @@ export function CharacterSelectionView({
   isAdmin,
   setTakenCharIds,
 }) {
-  const clientRef = useRef(null);
+  const { stompClient, gameStartTrigger, charUpdateTrigger } = useWebSocket();
+
+  const lastGameTrigger = useRef(gameStartTrigger);
+  const lastCharTrigger = useRef(charUpdateTrigger);
 
   useEffect(() => {
-    const client = new Client({
-      brokerURL:
-        import.meta.env.VITE_API_URL
-          ? (import.meta.env.VITE_API_URL.includes("localhost")
-              ? "ws://" + import.meta.env.VITE_API_URL + "/ws"
-              : "wss://" + import.meta.env.VITE_API_URL + "/ws")
-          : "ws://localhost:8080/ws",
-      reconnectDelay: 5000,
+    if (gameStartTrigger > lastGameTrigger.current) {
+      console.log("Game started");
+      onAdminStart();
+      lastGameTrigger.current = gameStartTrigger;
+    }
+  }, [gameStartTrigger, onAdminStart]);
 
-      onConnect: () => {
-        console.log("Connected");
-
-        client.subscribe("/topic/startGame", () => {
-          console.log("Game started");
-          onAdminStart();
-        });
-
-        client.subscribe("/topic/chooseCharacter", () => {
-          getCharacters()
-            .then((chars) => {
-              const takenDoc = chars.find((c) => c.id === "taken");
-              const takenChars = takenDoc
-                ? Object.keys(takenDoc.characters || {})
-                : [];
-              setTakenCharIds(takenChars);
-            })
-            .catch((error) => {
-              console.error("Fehler beim Laden der Charaktere:", error);
-            });
-        });
-      },
-
-      onError: (error) => {
-        console.error("WebSocket-Verbindungsfehler:", error);
-      },
-
-      onStompError: (frame) => {
-        console.error("STOMP-Fehler:", frame);
-      },
-    });
-
-    client.activate();
-    clientRef.current = client;
-
-    return () => {
-      client.deactivate();
-    };
-  }, [onAdminStart, setTakenCharIds]);
+  useEffect(() => {
+    if (charUpdateTrigger > lastCharTrigger.current) {
+      getCharacters().then((chars) => {
+        const takenDoc = chars.find((c) => c.id === "taken");
+        setTakenCharIds(takenDoc ? Object.keys(takenDoc.characters || {}) : []);
+      }).catch(err => console.error(err));
+      
+      lastCharTrigger.current = charUpdateTrigger;
+    }
+  }, [charUpdateTrigger, getCharacters, setTakenCharIds]);
 
   const handleStart = () => {
-    const client = clientRef.current;
-
-    if (client?.connected) {
-      client.publish({
+    if (stompClient && stompClient.connected) {
+      stompClient.publish({
         destination: "/app/startGame",
         body: "clicked",
       });

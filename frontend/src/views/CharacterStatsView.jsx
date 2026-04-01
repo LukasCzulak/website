@@ -1,7 +1,7 @@
-import { useRef, useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { ParsedText } from "../utils/ParsedText";
-import { Client } from "@stomp/stompjs";
 import { updateTakenChars } from "../api/characterService";
+import { useWebSocket } from "../utils/WebSocketContext";
 
 export function CharacterStatsView({
   character,
@@ -14,17 +14,36 @@ export function CharacterStatsView({
   setTakenCharIds,
   getCharacters,
 }) {
-  const clientRef = useRef(null);
   const isAdmin = localStorage.getItem("isAdmin") === "true";
   const [previousChar, setPreviousChar] = useState(() => {
       const p = localStorage.getItem("previousChar");
       return p && p !== "null" ? p : "";
-    });
+  });
+
+  const { stompClient, gameStartTrigger, charUpdateTrigger } = useWebSocket();
+  const lastGameTrigger = useRef(gameStartTrigger);
+  const lastCharTrigger = useRef(charUpdateTrigger);
+  useEffect(() => {
+    if (gameStartTrigger > lastGameTrigger.current) {
+      console.log("Game started");
+      onAdminStart();
+      lastGameTrigger.current = gameStartTrigger;
+    }
+  }, [gameStartTrigger, onAdminStart]);
+
+  useEffect(() => {
+    if (charUpdateTrigger > lastCharTrigger.current) {
+      getCharacters().then((chars) => {
+        const takenDoc = chars.find((c) => c.id === "taken");
+        setTakenCharIds(takenDoc ? Object.keys(takenDoc.characters || {}) : []);
+      }).catch(err => console.error(err));
+      
+      lastCharTrigger.current = charUpdateTrigger;
+    }
+  }, [charUpdateTrigger, getCharacters, setTakenCharIds]);
 
   const lockIn = async () => {
-    const client = clientRef.current;
     const previousId = previousChar;
-
     let newTaken = [...takenCharIds];
 
     if (previousId && previousId !== character.id) {
@@ -45,8 +64,8 @@ export function CharacterStatsView({
       console.error("konnte taken chars nicht aktualisieren:", err);
     }
 
-    if (client?.connected) {
-      client.publish({
+    if (stompClient && stompClient.connected) {
+      stompClient.publish({
         destination: "/app/chooseCharacter",
         body: JSON.stringify("update"),
       });
@@ -54,62 +73,7 @@ export function CharacterStatsView({
 
     localStorage.setItem("previousChar", character.id); 
     onLockIn();
-    
   };
-
-  useEffect(() => {
-    const client = new Client({
-      brokerURL:
-        import.meta.env.VITE_API_URL
-          ? (import.meta.env.VITE_API_URL.includes("localhost")
-              ? "ws://" + import.meta.env.VITE_API_URL + "/ws"
-              : "wss://" + import.meta.env.VITE_API_URL + "/ws")
-          : "ws://localhost:8080/ws",
-      reconnectDelay: 5000,
-
-      onConnect: () => {
-        console.log("Connected");
-
-        client.subscribe("/topic/startGame", () => {
-          console.log("Game started");
-          onAdminStart();
-        });
-
-        client.subscribe("/topic/chooseCharacter", () => {
-          // when someone else picks a champ, refresh the list so
-          // `takenCharIds` in Game.jsx is updated; the prop is a
-          // function so we have to call it and then propagate the
-          // result ourselves.
-          getCharacters()
-            .then((chars) => {
-              const takenDoc = chars.find((c) => c.id === "taken");
-              const takenChars = takenDoc
-                ? Object.keys(takenDoc.characters || {})
-                : [];
-              setTakenCharIds(takenChars);
-            })
-            .catch((error) => {
-              console.error("Fehler beim Laden der Charaktere:", error);
-            });
-        });
-      },
-
-      onError: (error) => {
-        console.error("WebSocket-Verbindungsfehler:", error);
-      },
-
-      onStompError: (frame) => {
-        console.error("STOMP-Fehler:", frame);
-      },
-    });
-
-    client.activate();
-    clientRef.current = client;
-
-    return () => {
-      client.deactivate();
-    };
-  }, [onAdminStart, setTakenCharIds]);
 
   if (!character) return null;
 

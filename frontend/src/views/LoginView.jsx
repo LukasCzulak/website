@@ -4,6 +4,7 @@ import { getUsers, createUser, requestLogin } from "../api/userService";
 
 export function LoginView({ onLogin, currentUser, setCurrentUser, isAdmin, setIsAdmin }) {
   const [view, setView] = useState("login");
+  const [error, setError] = useState("");
   const [users, setUsers] = useState([]);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");

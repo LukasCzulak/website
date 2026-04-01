@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Client } from "@stomp/stompjs";
+import { useWebSocket } from "../utils/WebSocketContext";
 import { getCharacters } from "../api/characterService";
 import "./SettingsView.css"
 import {
@@ -29,55 +29,22 @@ export function SettingsView({
   brightness,
   setBrightness,
 }) {
-  const clientRef = useRef(null);
+  const { stompClient, gameStartTrigger, charUpdateTrigger } = useWebSocket();
 
   useEffect(() => {
-    const client = new Client({
-      brokerURL:
-        import.meta.env.VITE_API_URL
-          ? "wss://" + import.meta.env.VITE_API_URL + "/ws"
-          : "ws://localhost:8080/ws",
-      reconnectDelay: 5000,
+    if (gameStartTrigger > 0) {
+      onAdminStart();
+    }
+  }, [gameStartTrigger, onAdminStart]);
 
-      onConnect: () => {
-        console.log("Connected");
-
-        client.subscribe("/topic/startGame", () => {
-          console.log("Game started");
-          onAdminStart();
-        });
-
-        client.subscribe("/topic/chooseCharacter", () => {
-          getCharacters()
-            .then((chars) => {
-              const takenDoc = chars.find((c) => c.id === "taken");
-              const takenChars = takenDoc
-                ? Object.keys(takenDoc.characters || {})
-                : [];
-              setTakenCharIds(takenChars);
-            })
-            .catch((error) => {
-              console.error("Fehler beim Laden der Charaktere:", error);
-            });
-        });
-      },
-
-      onError: (error) => {
-        console.error("WebSocket-Verbindungsfehler:", error);
-      },
-
-      onStompError: (frame) => {
-        console.error("STOMP-Fehler:", frame);
-      },
-    });
-
-    client.activate();
-    clientRef.current = client;
-
-    return () => {
-      client.deactivate();
-    };
-  }, [onAdminStart, setTakenCharIds]);
+  useEffect(() => {
+    if (charUpdateTrigger > 0) {
+      getCharacters().then((chars) => {
+        const takenDoc = chars.find((c) => c.id === "taken");
+        setTakenCharIds(takenDoc ? Object.keys(takenDoc.characters || {}) : []);
+      });
+    }
+  }, [charUpdateTrigger, getCharacters, setTakenCharIds]);
 
   const puzzleAreaRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -148,8 +115,8 @@ export function SettingsView({
     
     setBrightness(newBrightness);
 
-    if (clientRef.current && clientRef.current.connected) {
-      clientRef.current.publish({
+    if (stompClient && stompClient.connected) {
+      stompClient.publish({
         destination: "/topic/puzzle/brightness", 
         body: JSON.stringify({ user: currentUser || "Unbekannter Matrose", value: newBrightness }),
       });
@@ -158,8 +125,8 @@ export function SettingsView({
   }, [setBrightness, arcConfig.centerX, arcConfig.centerY, currentUser]);
 
   const sendBrightnessUpdate = useCallback((val) => {
-    if (clientRef.current && clientRef.current.connected) {
-      clientRef.current.publish({
+    if (stompClient && stompClient.connected) {
+      stompClient.publish({
         destination: "/topic/puzzle/brightness", 
         body: JSON.stringify({ user: currentUser || "Unbekannter Matrose", value: val }),
       });

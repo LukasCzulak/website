@@ -1,4 +1,10 @@
-const API_URL = import.meta.env.VITE_API_URL ? "https://" + import.meta.env.VITE_API_URL : "http://localhost:8080";
+let API_URL = "http://localhost:8080";
+
+if (import.meta.env.VITE_API_URL) {
+  API_URL = import.meta.env.VITE_API_URL.startsWith("http") 
+    ? import.meta.env.VITE_API_URL 
+    : "https://" + import.meta.env.VITE_API_URL;
+}
 
 export async function getTests() {
   const res = await fetch(`${API_URL}/api/test`);
