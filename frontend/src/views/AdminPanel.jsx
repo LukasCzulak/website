@@ -1,46 +1,80 @@
-import { useEffect, useState, useRef } from "react";
-import { Button, Card, Text, Group, Stack, Badge } from "@mantine/core";
-import { Client } from "@stomp/stompjs";
+import { useState } from "react";
+import { Button, Card, Text, Group, Stack, Badge, TextInput } from "@mantine/core";
+import { useWebSocket } from "../utils/WebSocketContext";
 
-export function AdminPanel({ setCurrentView }) {
-  const clientRef = useRef(null);
+export function AdminPanel({ setCurrentView, takenCharIds, allCharacters }) {
+  const { stompClient, playerBrightness, combatState } = useWebSocket();
   
-  const [playerBrightness, setPlayerBrightness] = useState({});
-
-  useEffect(() => {
-    const client = new Client({
-      brokerURL: "wss://" + import.meta.env.VITE_API_URL + "/ws" || "ws://localhost:8080/ws",
-      reconnectDelay: 5000,
-      onConnect: () => {
-        console.log("Admin verbunden: Lausche auf Sonnen-Rätsel");
-        
-        client.subscribe("/topic/puzzle/brightness", (payload) => {
-          try {
-            const data = JSON.parse(payload.body);
-            setPlayerBrightness((prev) => ({
-              ...prev,
-              [data.user]: data.value,
-            }));
-          } catch (e) {
-            console.error("Fehler beim Parsen der Helligkeit:", e);
-          }
-        });
-      },
-    });
-
-    client.activate();
-    clientRef.current = client;
-
-    return () => client.deactivate();
-  }, []);
+  const [initiativeInput, setInitiativeInput] = useState("");
 
   const handleDimAll = () => {
-    if (clientRef.current && clientRef.current.connected) {
-      clientRef.current.publish({ 
+    if (stompClient && stompClient.connected) {
+      stompClient.publish({ 
         destination: "/topic/puzzle/dim", 
         body: "dim_lights" 
       });
     }
+  };
+
+  const handleStartCombat = () => {
+    console.log("Button clicked! stompClient:", stompClient);
+    console.log("Connected:", stompClient?.connected);
+    console.log("Initiative input:", initiativeInput);
+    
+    if (stompClient && stompClient.connected && initiativeInput.trim() !== "") {
+      const order = initiativeInput.split(",").map((s) => s.trim()).filter(Boolean);
+      console.log("Sending combat start order:", order);
+      
+      stompClient.publish({
+        destination: "/app/combat/start", 
+        body: JSON.stringify(order)
+      });
+      console.log("Message published!");
+    } else {
+      console.log("Cannot start combat - conditions not met");
+    }
+  };
+
+  const handleNextTurn = () => {
+    if (stompClient && stompClient.connected) {
+      stompClient.publish({
+        destination: "/app/combat/nextTurn",
+        body: "" 
+      });
+    }
+  };
+
+  const handlePrevTurn = () => {
+    if (stompClient && stompClient.connected) {
+      stompClient.publish({
+        destination: "/app/combat/prevTurn",
+        body: "" 
+      });
+    }
+  };
+
+  const handleEndCombat = () => {
+    if (stompClient && stompClient.connected) {
+      stompClient.publish({
+        destination: "/app/combat/end",
+        body: "" 
+      });
+    }
+  };
+
+  const handleAutoFillPlayers = () => {
+    if (!takenCharIds || !allCharacters) return;
+    
+    const playerNames = takenCharIds.map(id => {
+      const char = allCharacters.find(c => c.id === id);
+      if (char && char.name) {
+        return char.name.charAt(0).toUpperCase() + char.name.slice(1);
+      }
+      return "";
+    }).filter(name => name !== "");
+
+    const existing = initiativeInput ? initiativeInput + ", " : "";
+    setInitiativeInput(existing + playerNames.join(", "));
   };
 
   const playersAtZenith = Object.entries(playerBrightness).filter(
@@ -48,8 +82,81 @@ export function AdminPanel({ setCurrentView }) {
   );
 
   return (
-    <div style={{ padding: "2rem", zIndex: 0, maxWidth: "600px", margin: "0 auto", textAlign: "left" }}>
+    <div style={{ padding: "2rem", zIndex: 0, maxWidth: "600px", margin: "0 auto", textAlign: "left", maxHeight: "100vh", overflowY: "auto" }}>
       <h2 style={{ color: "#c9a473", textAlign: "center" }}>Admin Kontrollraum</h2>
+
+      <Card shadow="sm" padding="lg" radius="md" withBorder style={{ background: "rgba(20,20,20,0.8)", borderColor: "#5c4b37", marginBottom: "2rem" }}>
+        <h3 style={{ color: "white", marginTop: 0 }}>Kampf-Steuerung</h3>
+        
+        <Group position="apart" mb="xs">
+          <Text size="sm" color="#c9a473">Initiative-Reihenfolge (IDs und Gegner-Namen)</Text>
+          <Button size="xs" variant="outline" color="green" onClick={handleAutoFillPlayers}>
+            + Aktive Spieler einfügen
+          </Button>
+        </Group>
+
+        <TextInput
+          placeholder="z.B. char-123, Thresh, char-456, Elise"
+          value={initiativeInput}
+          onChange={(e) => setInitiativeInput(e.currentTarget.value)}
+          styles={{ input: { background: "#2a2a2a", color: "white", borderColor: "#5c4b37" } }}
+          mb="md"
+        />
+
+        <Group position="apart">
+          <Button 
+            style={{ background: "#c9a473", color: "#1a1a1a" }} 
+            onClick={handleStartCombat}
+          >
+            Kampf Starten 
+          </Button>
+
+          <Button 
+              variant="filled" 
+              color="red" 
+              onClick={handleEndCombat}
+              disabled={!combatState?.inCombat}
+            >
+              Beenden
+            </Button>
+          
+          <Group spacing="xs">
+            <Button 
+              variant="outline" 
+              color="yellow" 
+              onClick={handlePrevTurn}
+              disabled={!combatState?.inCombat}
+            >
+              ⬅️
+            </Button>
+            <Button 
+              variant="outline" 
+              color="red" 
+              onClick={handleNextTurn}
+              disabled={!combatState?.inCombat}
+            >
+              ➡️
+            </Button>
+          </Group>
+        </Group>
+
+        {combatState?.inCombat && (
+          <div style={{ marginTop: "1rem", padding: "1rem", background: "#1a1a1a", borderRadius: "8px", border: "1px solid #333" }}>
+            <Text c="white" weight={600}>Aktueller Kampf (Runde {combatState.round})</Text>
+            <Group spacing="xs" mt="xs">
+              {combatState.turnOrder.map((entity, index) => (
+                <Badge 
+                  key={index} 
+                  color={combatState.turnIndex === index ? "yellow" : "gray"}
+                  variant={combatState.turnIndex === index ? "filled" : "outline"}
+                >
+                  {entity}
+                </Badge>
+              ))}
+            </Group>
+          </div>
+        )}
+      </Card>
 
       <Card shadow="sm" padding="lg" radius="md" withBorder style={{ background: "rgba(20,20,20,0.8)", borderColor: "#5c4b37" }}>
         <h3 style={{ color: "white", marginTop: 0 }}>Sonnen-Schrein Rätsel</h3>
@@ -95,7 +202,7 @@ export function AdminPanel({ setCurrentView }) {
         </div>
       </Card>
 
-      <div style={{ textAlign: "center", marginTop: "2rem" }}>
+      <div style={{ textAlign: "center", marginTop: "2rem", marginBottom: "2rem" }}>
         <Button variant="outline" color="gray" onClick={() => setCurrentView("selection")}>
           Zurück zur Auswahl
         </Button>
