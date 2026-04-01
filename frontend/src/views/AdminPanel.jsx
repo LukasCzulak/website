@@ -17,21 +17,13 @@ export function AdminPanel({ setCurrentView, takenCharIds, allCharacters }) {
   };
 
   const handleStartCombat = () => {
-    console.log("Button clicked! stompClient:", stompClient);
-    console.log("Connected:", stompClient?.connected);
-    console.log("Initiative input:", initiativeInput);
-    
     if (stompClient && stompClient.connected && initiativeInput.trim() !== "") {
       const order = initiativeInput.split(",").map((s) => s.trim()).filter(Boolean);
-      console.log("Sending combat start order:", order);
       
       stompClient.publish({
         destination: "/app/combat/start", 
         body: JSON.stringify(order)
       });
-      console.log("Message published!");
-    } else {
-      console.log("Cannot start combat - conditions not met");
     }
   };
 
