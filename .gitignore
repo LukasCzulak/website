@@ -67,3 +67,4 @@ HELP.md
 *.local
 
 .metals/*
+.metals/
