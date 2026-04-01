@@ -315,7 +315,7 @@ export function SettingsView({
                   max={100}
                   disabled={lowPower}
                   color="orange"
-                  marks={[{ value: 20, label: "Normal" }]}
+                  marks={[{ value: 25, label: "Normal" }]}
                 />
               </div>
 
@@ -387,7 +387,11 @@ export function SettingsView({
             <button
               className="pirate-btn"
               style={{ background: "#5c4b37", color: "white" }}
-              onClick={() => onApply(false, 25, 3, 5)}
+              onClick={() => {
+                setBrightness(50);
+                sendBrightnessUpdate(50);
+                onApply(false, 25, 3, 5);
+              }}
             >
               Standard
             </button>

@@ -112,7 +112,14 @@ export function Game() {
 
   const [characters, setCharacters] = useState([]);
   const [isLoadingChars, setIsLoadingChars] = useState(true);
-  const [brightness, setBrightness] = useState(50);
+  const [brightness, setBrightness] = useState(() => {
+    const stored = localStorage.getItem("brightness");
+    return stored !== null ? parseFloat(stored) : 50;
+  });
+
+  useEffect(() => {
+    localStorage.setItem("brightness", brightness);
+  }, [brightness]);
 
   useEffect(() => {
     if (stompClient && stompClient.connected && !isAdmin && currentUser) {
