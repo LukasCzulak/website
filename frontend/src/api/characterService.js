@@ -1,4 +1,4 @@
-const API_URL = "https://" + import.meta.env.VITE_API_URL || "http://localhost:8080";
+const API_URL = import.meta.env.VITE_API_URL ? "https://" + import.meta.env.VITE_API_URL : "http://localhost:8080";
 
 export async function getCharacters() {
   const res = await fetch(`${API_URL}/api/characters`);
