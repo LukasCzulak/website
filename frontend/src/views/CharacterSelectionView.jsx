@@ -17,8 +17,11 @@ export function CharacterSelectionView({
   useEffect(() => {
     const client = new Client({
       brokerURL:
-        "wss://" + import.meta.env.VITE_API_URL + "/ws" ||
-        "ws://localhost:8080/ws",
+        import.meta.env.VITE_API_URL
+          ? (import.meta.env.VITE_API_URL.includes("localhost")
+              ? "ws://" + import.meta.env.VITE_API_URL + "/ws"
+              : "wss://" + import.meta.env.VITE_API_URL + "/ws")
+          : "ws://localhost:8080/ws",
       reconnectDelay: 5000,
 
       onConnect: () => {

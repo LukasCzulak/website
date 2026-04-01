@@ -16,8 +16,10 @@ import { CharacterCreationView } from "../views/CharacterCreationView";
 import { AdminPanel } from "../views/AdminPanel";
 
 import { getCharacters } from "../api/characterService";
+import { useWebSocket } from "../utils/WebSocketContext";
 
 export function Game() {
+  const { dimLightsTrigger, stompClient } = useWebSocket();
   const [lowPowerMode, setLowPowerMode] = useState(() => {
     return localStorage.getItem("lowPowerMode") === "true";
   });
@@ -113,6 +115,18 @@ export function Game() {
   const [brightness, setBrightness] = useState(50);
 
   useEffect(() => {
+    if (stompClient && stompClient.connected && !isAdmin && currentUser) {
+      stompClient.publish({
+        destination: "/topic/puzzle/brightness",
+        body: JSON.stringify({
+          user: currentUser,
+          value: brightness,
+        }),
+      });
+    }
+  }, [brightness, stompClient, isAdmin, currentUser]);
+
+  useEffect(() => {
     getCharacters()
       .then((data) => {
         setCharacters(data);
@@ -133,39 +147,27 @@ export function Game() {
   const dimIntervalRef = useRef(null);
 
   useEffect(() => {
-    if (isAdmin) return;
+    if (isAdmin || dimLightsTrigger === 0) return;
 
-    const client = new Client({
-      brokerURL:
-        "wss://" + import.meta.env.VITE_API_URL + "/ws" ||
-        "ws://localhost:8080/ws",
-      reconnectDelay: 5000,
-      onConnect: () => {
-        client.subscribe("/topic/puzzle/dim", () => {
-          if (dimIntervalRef.current) clearInterval(dimIntervalRef.current);
+    if (dimIntervalRef.current) clearInterval(dimIntervalRef.current);
 
-          dimIntervalRef.current = setInterval(() => {
-            setBrightness((prev) => {
-              const next = prev - 1.6;
+    // Start dimming the lights
+    dimIntervalRef.current = setInterval(() => {
+      setBrightness((prev) => {
+        const next = prev - 1.6;
 
-              if (next <= 0) {
-                clearInterval(dimIntervalRef.current);
-                return 0;
-              }
-              return next;
-            });
-          }, 50);
-        });
-      },
-    });
-
-    client.activate();
+        if (next <= 0) {
+          clearInterval(dimIntervalRef.current);
+          return 0;
+        }
+        return next;
+      });
+    }, 50);
 
     return () => {
-      client.deactivate();
       if (dimIntervalRef.current) clearInterval(dimIntervalRef.current);
     };
-  }, [isAdmin]);
+  }, [dimLightsTrigger, isAdmin]);
 
   if (isLoadingChars) {
     return (
@@ -300,11 +302,16 @@ export function Game() {
         {(currentView === "game" ||
           (currentView === "settings" && previousView.current === "game")) &&
           (isAdmin ? (
-            <AdminPanel setCurrentView={setCurrentView} />
+            <AdminPanel 
+              setCurrentView={setCurrentView} 
+              takenCharIds={takenCharIds}
+              allCharacters={characters}
+            />
           ) : (
             <MainGameView
               setCurrentView={setCurrentView}
               character={characters.find((c) => c.id === lockedCharId)}
+              allCharacters={characters}
             />
           ))}
       </div>

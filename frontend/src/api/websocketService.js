@@ -1,7 +1,9 @@
 import { Client } from "@stomp/stompjs";
 
 const client = new Client({
-  brokerURL: "wss://" + import.meta.env.VITE_API_URL + "/ws" || "wss://localhost:8080/ws",
+  brokerURL: import.meta.env.VITE_API_URL
+    ? "wss://" + import.meta.env.VITE_API_URL + "/ws"
+    : "ws://localhost:8080/ws",
   reconnectDelay: 5000,
 
   onConnect: () => {

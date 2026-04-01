@@ -34,8 +34,9 @@ export function SettingsView({
   useEffect(() => {
     const client = new Client({
       brokerURL:
-        "wss://" + import.meta.env.VITE_API_URL + "/ws" ||
-        "ws://localhost:8080/ws",
+        import.meta.env.VITE_API_URL
+          ? "wss://" + import.meta.env.VITE_API_URL + "/ws"
+          : "ws://localhost:8080/ws",
       reconnectDelay: 5000,
 
       onConnect: () => {

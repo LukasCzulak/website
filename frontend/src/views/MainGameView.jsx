@@ -2,7 +2,28 @@ import { useState } from "react";
 import { Button, Modal } from "@mantine/core";
 import { IconInfoCircle, IconSword } from "@tabler/icons-react";
 import { ParsedText } from "../utils/ParsedText";
+import { useWebSocket } from "../utils/WebSocketContext";
 import "./MainGameView.css";
+
+function EntityAvatar({ entityName, dbChar }) {
+  const [imgError, setImgError] = useState(false);
+  
+  // try using icon, else guess the enemy icon by their name
+  const imgSrc = dbChar?.icon ? `/icons/${dbChar.icon}` : `/enemies/${entityName}_Icon.webp`;
+
+  if (imgError) {
+    return <span>{entityName.charAt(0).toUpperCase()}</span>;
+  }
+
+  return (
+    <img 
+      src={imgSrc} 
+      alt={entityName} 
+      onError={() => setImgError(true)}
+      style={{ width: "100%", height: "100%", objectFit: "cover", transform: "scale(1.15)" }} 
+    />
+  );
+}
 
 function AbilityRow({ ability, type, onActivate, onInfo, isPassive }) {
   if (!ability) return null;
@@ -41,8 +62,9 @@ function AbilityRow({ ability, type, onActivate, onInfo, isPassive }) {
   );
 }
 
-export function MainGameView({ setCurrentView, character }) {
+export function MainGameView({ setCurrentView, character, allCharacters }) {
   const [selectedAbility, setSelectedAbility] = useState(null);
+  const { combatState } = useWebSocket();
 
   if (!character) {
     return <div className="loading-text">Loading character...</div>;
@@ -69,6 +91,47 @@ export function MainGameView({ setCurrentView, character }) {
 
   return (
     <div className="game-container">
+      
+      {combatState?.inCombat && (
+        <div className="initiative-tracker" style={{
+          position: "absolute", top: 10, left: "50%", transform: "translateX(-50%)",
+          display: "flex", gap: "10px", background: "rgba(15, 20, 25, 0.9)",
+          padding: "10px 20px", borderRadius: "8px", border: "1px solid #c9a473",
+          zIndex: 100, alignItems: "center", boxShadow: "0 4px 15px rgba(0,0,0,0.6)"
+        }}>
+          <span style={{ color: "#c9a473", fontWeight: "bold", marginRight: "10px" }}>
+            Runde {combatState.round}
+          </span>
+          
+          {combatState.turnOrder.map((entityName, index) => {
+            const isTurn = combatState.turnIndex === index;
+            const dbChar = allCharacters?.find(c => c.id === entityName || c.name === entityName);
+            
+            const isPlayer = !!dbChar; 
+            const isMe = character?.id === entityName || character?.name === entityName;
+            
+            let borderColor = "#8b0000"; // Enemy: Red
+            if (isMe) borderColor = "#caa36f"; // Me: Gold
+            else if (isPlayer) borderColor = "#107a32"; // Ally: Dark Green
+
+            return (
+              <div key={index} style={{
+                width: "40px", height: "40px", borderRadius: "50%",
+                background: "#a1a1a1",
+                border: `3px solid ${borderColor}`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                color: "white", fontWeight: "bold", fontSize: "1.2rem",
+                transform: isTurn ? "scale(1.2)" : "scale(1)",
+                transition: "all 0.3s ease",
+                overflow: "hidden" 
+              }}>
+                <EntityAvatar entityName={entityName} dbChar={dbChar} />
+              </div>
+            );
+          })}
+        </div>
+      )}
+
       <div className="top-left">
         <div 
           className="champ-icon-circle clickable"
