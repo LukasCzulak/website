@@ -51,4 +51,21 @@ public class CharacterService {
             throw new RuntimeException(e);
         }
     }
+
+    public Mono<Character> updateHidden(Character character) {
+        return Mono.fromCallable(() -> {
+
+            String id = character.getId();
+            character.setId(null);
+
+            firestore.collection(COLLECTION_NAME)
+                    .document(id)
+                    .set(character)
+                    .get();
+
+            character.setId(id);
+
+            return character;
+        });
+    }
 }

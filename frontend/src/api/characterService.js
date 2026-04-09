@@ -1,8 +1,8 @@
 let API_URL = "http://localhost:8080";
 
 if (import.meta.env.VITE_API_URL) {
-  API_URL = import.meta.env.VITE_API_URL.startsWith("http") 
-    ? import.meta.env.VITE_API_URL 
+  API_URL = import.meta.env.VITE_API_URL.startsWith("http")
+    ? import.meta.env.VITE_API_URL
     : "https://" + import.meta.env.VITE_API_URL;
 }
 
@@ -36,6 +36,20 @@ export async function updateTakenChars(data) {
 
   if (!res.ok) {
     throw new Error("Failed to update taken characters");
+  }
+
+  return true;
+}
+
+export async function updateHidden(data) {
+  const res = await fetch(`${API_URL}/api/characters`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to update hidden");
   }
 
   return true;
