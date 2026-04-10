@@ -22,6 +22,9 @@ export function WebSocketProvider({ children }) {
   const [heal, setHeal] = useState(0);
   const [champHeal, setChampHeal] = useState("");
 
+  const [ulti, setUlti] = useState("");
+  const [cue, setCue] = useState("");
+
   useEffect(() => {
     const client = new Client({
       brokerURL: import.meta.env.VITE_API_URL
@@ -75,6 +78,16 @@ export function WebSocketProvider({ children }) {
           setChampHeal(data.champ);
         });
 
+        client.subscribe("/topic/combat/ulti", (message) => {
+          const data = JSON.parse(message.body);
+          setUlti(data.champ);
+        });
+
+        client.subscribe("/topic/combat/cue", (message) => {
+          const data = JSON.parse(message.body);
+          setCue(data.champ);
+        });
+
         client.subscribe("/topic/startGame", () => {
           setGameStartTrigger((prev) => prev + 1);
         });
@@ -106,6 +119,8 @@ export function WebSocketProvider({ children }) {
         heal,
         champDmg,
         champHeal,
+        ulti,
+        cue,
       }}
     >
       {children}

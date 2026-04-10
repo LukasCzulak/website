@@ -96,4 +96,18 @@ public class CombatController {
         return message;
     }
 
+    @MessageMapping("/combat/ulti")
+    @SendTo("/topic/combat/ulti")
+    public UltiMessage heal(@Payload UltiMessage message) {
+
+        return message;
+    }
+
+    @MessageMapping("/combat/cue")
+    @SendTo("/topic/combat/cue")
+    public CueMessage heal(@Payload CueMessage message) {
+
+        return message;
+    }
+
 }

@@ -95,6 +95,28 @@ export function AdminPanel({ setCurrentView, takenCharIds, allCharacters }) {
     }
   };
 
+  const handleReviveUlti = (champ) => {
+    if (stompClient && stompClient.connected) {
+      stompClient.publish({
+        destination: "/app/combat/ulti",
+        body: JSON.stringify({
+          champ,
+        }),
+      });
+    }
+  };
+
+  const handleGiveCue = (champ) => {
+    if (stompClient && stompClient.connected) {
+      stompClient.publish({
+        destination: "/app/combat/cue",
+        body: JSON.stringify({
+          champ,
+        }),
+      });
+    }
+  };
+
   const handleAutoFillPlayers = () => {
     if (!takenCharIds || !allCharacters) return;
 
@@ -287,6 +309,14 @@ export function AdminPanel({ setCurrentView, takenCharIds, allCharacters }) {
                     <Button
                       size="compact-sm"
                       style={{ background: "#c9a473", color: "#1a1a1a" }}
+                      onClick={() => handleReviveUlti(champ)}
+                    >
+                      revive ulti
+                    </Button>
+                    <Button
+                      size="compact-sm"
+                      style={{ background: "#c9a473", color: "#1a1a1a" }}
+                      onClick={() => handleGiveCue(champ)}
                     >
                       give cue
                     </Button>

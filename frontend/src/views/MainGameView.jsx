@@ -88,7 +88,7 @@ function AbilityRow({
 
 export function MainGameView({ setCurrentView, character, allCharacters }) {
   const [selectedAbility, setSelectedAbility] = useState(null);
-  const { combatState, champDmg, dmg, champHeal, heal } = useWebSocket();
+  const { combatState, champDmg, dmg, champHeal, heal, ulti, cue } = useWebSocket();
 
   const [currentHP, setCurrentHP] = useState(() => {
     return localStorage.getItem("currentHP") || character.hitpoints;
@@ -118,6 +118,14 @@ export function MainGameView({ setCurrentView, character, allCharacters }) {
       handleHeal(heal);
     }
   }, [champHeal, heal]);
+
+  useEffect(() => {
+    if (ulti === character.id) {
+      console.log("regained ulti");
+      setUltimateUsed(false);
+      localStorage.setItem("ultimateUsed", false);
+    }
+  }, [ulti, character.id]);
 
   useEffect(() => {
     if (!combatState || !combatState.turnOrder) return;
