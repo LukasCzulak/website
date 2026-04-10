@@ -18,6 +18,8 @@ export function AdminPanel({ setCurrentView, takenCharIds, allCharacters }) {
   const { stompClient, playerBrightness, combatState } = useWebSocket();
 
   const [initiativeInput, setInitiativeInput] = useState("");
+  const [damage, setDamage] = useState({});
+  const [heal, setHeal] = useState({});
 
   const handleDimAll = () => {
     if (stompClient && stompClient.connected) {
@@ -65,6 +67,30 @@ export function AdminPanel({ setCurrentView, takenCharIds, allCharacters }) {
       stompClient.publish({
         destination: "/app/combat/end",
         body: "",
+      });
+    }
+  };
+
+  const handleDealDmg = (dmg, champ) => {
+    if (stompClient && stompClient.connected) {
+      stompClient.publish({
+        destination: "/app/combat/dmg",
+        body: JSON.stringify({
+          dmg,
+          champ,
+        }),
+      });
+    }
+  };
+
+  const handleHeal = (heal, champ) => {
+    if (stompClient && stompClient.connected) {
+      stompClient.publish({
+        destination: "/app/combat/heal",
+        body: JSON.stringify({
+          heal,
+          champ,
+        }),
       });
     }
   };
@@ -126,11 +152,10 @@ export function AdminPanel({ setCurrentView, takenCharIds, allCharacters }) {
   return (
     <div
       style={{
-        marginTop: "-7rem",
         padding: "2rem",
         zIndex: 0,
         maxWidth: "100vw",
-        margin: "0 auto",
+        margin: "-5rem auto 0 auto",
         textAlign: "left",
         maxHeight: "100vh",
       }}
@@ -171,8 +196,58 @@ export function AdminPanel({ setCurrentView, takenCharIds, allCharacters }) {
                 <Text component="div" c="white" size="lg">
                   {name} - {champ}
                   <Flex direction="row" align="center" gap="xl" mb="10px">
-                    <TextInput c="red" label="Damage" placeholder="Damage" />
-                    <TextInput c="green" label="Heal" placeholder="Heal" />
+                    <TextInput
+                      c="red"
+                      label="Damage"
+                      placeholder="Damage"
+                      value={damage[champ] || ""}
+                      onChange={(e) =>
+                        setDamage((prev) => ({
+                          ...prev,
+                          [champ]: e.target.value,
+                        }))
+                      }
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          const dmgInt = parseInt(damage[champ], 10);
+
+                          if (!isNaN(dmgInt)) {
+                            handleDealDmg(dmgInt, champ);
+
+                            setDamage((prev) => ({
+                              ...prev,
+                              [champ]: "",
+                            }));
+                          }
+                        }
+                      }}
+                    />
+                    <TextInput
+                      c="green"
+                      label="Heal"
+                      placeholder="Heal"
+                      value={heal[champ] || ""}
+                      onChange={(e) =>
+                        setHeal((prev) => ({
+                          ...prev,
+                          [champ]: e.target.value,
+                        }))
+                      }
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          const healInt = parseInt(heal[champ], 10);
+
+                          if (!isNaN(healInt)) {
+                            handleHeal(healInt, champ);
+
+                            setHeal((prev) => ({
+                              ...prev,
+                              [champ]: "",
+                            }));
+                          }
+                        }
+                      }}
+                    />
                   </Flex>
                   <Flex direction="row" align="center" gap="xl" mb="10px">
                     <Switch

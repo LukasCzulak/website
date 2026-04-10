@@ -160,6 +160,11 @@
   transition: transform 0.1s;
 }
 
+.disabled {
+  filter: grayscale(100%);
+  opacity: 0.4;
+}
+
 .clickable {
   cursor: pointer;
 }

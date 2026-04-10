@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button, Modal } from "@mantine/core";
 import { IconInfoCircle, IconSword } from "@tabler/icons-react";
 import { ParsedText } from "../utils/ParsedText";
@@ -32,15 +32,24 @@ function EntityAvatar({ entityName, dbChar }) {
   );
 }
 
-function AbilityRow({ ability, type, onActivate, onInfo, isPassive }) {
+function AbilityRow({
+  ability,
+  type,
+  onActivate,
+  onInfo,
+  isPassive,
+  isAvailable,
+}) {
   if (!ability) return null;
 
   return (
     <div className="ability-row">
       <div
-        className={`ability-icon-wrapper ${isPassive ? "passive-icon" : "clickable"}`}
+        className={`ability-icon-wrapper ${
+          isPassive ? "passive-icon" : "clickable"
+        } ${!isAvailable ? "disabled" : ""}`}
         onClick={() => {
-          if (!isPassive) onActivate(ability, type);
+          if (!isPassive && isAvailable) onActivate(ability, type);
         }}
       >
         {ability.icon ? (
@@ -49,6 +58,7 @@ function AbilityRow({ ability, type, onActivate, onInfo, isPassive }) {
             alt={type}
             className="ability-img"
           />
+          
         ) : (
           <div className="ability-img-placeholder">{type.charAt(0)}</div>
         )}
@@ -78,7 +88,50 @@ function AbilityRow({ ability, type, onActivate, onInfo, isPassive }) {
 
 export function MainGameView({ setCurrentView, character, allCharacters }) {
   const [selectedAbility, setSelectedAbility] = useState(null);
-  const { combatState } = useWebSocket();
+  const { combatState, champDmg, dmg, champHeal, heal } = useWebSocket();
+
+  const [currentHP, setCurrentHP] = useState(() => {
+    return localStorage.getItem("currentHP") || character.hitpoints;
+  });
+
+  const [normalCooldown, setNormalCooldown] = useState(() => {
+    return localStorage.getItem("normalCooldown") || 0;
+  });
+
+  const [ultimateUsed, setUltimateUsed] = useState(() => {
+    return localStorage.getItem("ultimateUsed") || false;
+  });
+
+  useEffect(() => {
+    if (champDmg === character.id) {
+      console.log("Damage taken");
+      handleDamage(dmg);
+    }
+  }, [champDmg, dmg]);
+
+  useEffect(() => {
+    if (champHeal === character.id) {
+      console.log("Healed");
+      handleHeal(heal);
+    }
+  }, [champHeal, heal]);
+
+  const handleDamage = (dmg) => {
+    console.log("Taking damage");
+    let tmp = Number(currentHP);
+    tmp -= dmg;
+    tmp = Math.max(0, tmp);
+    setCurrentHP(tmp);
+    localStorage.setItem("currentHP", tmp);
+  };
+
+  const handleHeal = (heal) => {
+    let tmp = Number(currentHP);
+    tmp += heal;
+    tmp = Math.min(character.hitpoints, tmp);
+    setCurrentHP(tmp);
+    localStorage.setItem("currentHP", tmp);
+  };
 
   if (!character) {
     return <div className="loading-text">Loading character...</div>;
@@ -87,6 +140,18 @@ export function MainGameView({ setCurrentView, character, allCharacters }) {
   const handleActivateAbility = (ability, type) => {
     console.log(`Activating ${type}!`, ability);
     // TODO: Send WebSocket message to use ability/attack!
+    if (type === "Regulär") {
+      setNormalCooldown(character.abilities.regular.cooldown);
+      localStorage.setItem(
+        "normalCooldown",
+        character.abilities.regular.cooldown,
+      );
+    }
+
+    if (type === "Ultimativ") {
+      setUltimateUsed(true);
+      localStorage.setItem("ultimateUsed", true);
+    }
   };
 
   const handleShowInfo = (item, type) => {
@@ -231,9 +296,12 @@ export function MainGameView({ setCurrentView, character, allCharacters }) {
       <div className="health-bar-container">
         <span className="health-label desktop-only">HP</span>
         <div className="health-bar-wrapper">
-          <div className="health-bar-fill" style={{ width: "100%" }}></div>
+          <div
+            className="health-bar-fill"
+            style={{ width: `${(currentHP / character.hitpoints) * 100}%` }}
+          ></div>
           <span className="health-text">
-            {character.hitpoints} / {character.hitpoints}
+            {currentHP} / {character.hitpoints}
           </span>
         </div>
       </div>
@@ -244,18 +312,21 @@ export function MainGameView({ setCurrentView, character, allCharacters }) {
           type="Passive"
           isPassive={true}
           onInfo={handleShowInfo}
+          isAvailable={true}
         />
         <AbilityRow
           ability={character.abilities?.regular}
           type="Regulär"
           onActivate={handleActivateAbility}
           onInfo={handleShowInfo}
+          isAvailable={normalCooldown === 0}
         />
         <AbilityRow
           ability={character.abilities?.ultimate}
           type="Ultimativ"
           onActivate={handleActivateAbility}
           onInfo={handleShowInfo}
+          isAvailable={!ultimateUsed}
         />
         {character.abilities?.hidden_1.activated && (
           <AbilityRow

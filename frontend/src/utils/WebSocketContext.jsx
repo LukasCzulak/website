@@ -10,21 +10,25 @@ export const useWebSocket = () => {
 export function WebSocketProvider({ children }) {
   const [stompClient, setStompClient] = useState(null);
   const [combatState, setCombatState] = useState(null);
-  
+
   const [playerBrightness, setPlayerBrightness] = useState({});
   const [dimLightsTrigger, setDimLightsTrigger] = useState(0);
 
   const [gameStartTrigger, setGameStartTrigger] = useState(0);
   const [charUpdateTrigger, setCharUpdateTrigger] = useState(0);
 
+  const [dmg, setDmg] = useState(0);
+  const [champDmg, setChampDmg] = useState("");
+  const [heal, setHeal] = useState(0);
+  const [champHeal, setChampHeal] = useState("");
+
   useEffect(() => {
     const client = new Client({
-      brokerURL:
-        import.meta.env.VITE_API_URL
-          ? (import.meta.env.VITE_API_URL.includes("localhost") 
-              ? "ws://" + import.meta.env.VITE_API_URL + "/ws"
-              : "wss://" + import.meta.env.VITE_API_URL + "/ws")
-          : "ws://localhost:8080/ws",
+      brokerURL: import.meta.env.VITE_API_URL
+        ? import.meta.env.VITE_API_URL.includes("localhost")
+          ? "ws://" + import.meta.env.VITE_API_URL + "/ws"
+          : "wss://" + import.meta.env.VITE_API_URL + "/ws"
+        : "ws://localhost:8080/ws",
       reconnectDelay: 5000,
       onConnect: () => {
         console.log("Global WebSocket Connected!");
@@ -55,8 +59,20 @@ export function WebSocketProvider({ children }) {
 
         // Player Dim Subscription (Moved from Game)
         client.subscribe("/topic/puzzle/dim", () => {
-           // We just increment a number so components know a 'dim' event happened
-           setDimLightsTrigger((prev) => prev + 1);
+          // We just increment a number so components know a 'dim' event happened
+          setDimLightsTrigger((prev) => prev + 1);
+        });
+
+        client.subscribe("/topic/combat/dmg", (message) => {
+          const data = JSON.parse(message.body);
+          setDmg(data.dmg);
+          setChampDmg(data.champ);
+        });
+
+        client.subscribe("/topic/combat/heal", (message) => {
+          const data = JSON.parse(message.body);
+          setHeal(data.heal);
+          setChampHeal(data.champ);
         });
 
         client.subscribe("/topic/startGame", () => {
@@ -85,7 +101,11 @@ export function WebSocketProvider({ children }) {
         dimLightsTrigger,
         combatState,
         gameStartTrigger,
-        charUpdateTrigger
+        charUpdateTrigger,
+        dmg,
+        heal,
+        champDmg,
+        champHeal,
       }}
     >
       {children}

@@ -79,4 +79,21 @@ public class CombatController {
         currentState.getTurnOrder().clear();
         return currentState;
     }
+
+    @MessageMapping("/combat/dmg")
+    @SendTo("/topic/combat/dmg")
+    public DamageMessage dealDamage(@Payload DamageMessage message) {
+        System.out.println("DMG RECEIVED: " + message.getDmg() + " " + message.getChamp());
+
+        return message;
+    }
+
+    @MessageMapping("/combat/heal")
+    @SendTo("/topic/combat/heal")
+    public HealMessage heal(@Payload HealMessage message) {
+        System.out.println("HEAL RECEIVED: " + message.getHeal() + " " + message.getChamp());
+
+        return message;
+    }
+
 }
