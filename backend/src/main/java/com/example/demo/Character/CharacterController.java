@@ -33,8 +33,8 @@ public class CharacterController {
         return ResponseEntity.ok().build();
     }
     @PutMapping
-    public ResponseEntity<?> updateHidden(@RequestBody Character character) {
-        characterService.updateHidden(character);
-        return ResponseEntity.ok().build();
+    public Mono<ResponseEntity<?>> updateHidden(@RequestBody Character character) {
+        return characterService.updateHidden(character)
+                .thenReturn(ResponseEntity.ok().build());
     }
 }
