@@ -95,12 +95,15 @@ export function MainGameView({ setCurrentView, character, allCharacters }) {
   });
 
   const [normalCooldown, setNormalCooldown] = useState(() => {
-    return localStorage.getItem("normalCooldown") || 0;
+    return Number(localStorage.getItem("normalCooldown") || 0);
   });
 
   const [ultimateUsed, setUltimateUsed] = useState(() => {
-    return localStorage.getItem("ultimateUsed") || false;
+    return localStorage.getItem("ultimateUsed") === "true";
   });
+
+  const [lastTurnIndex, setLastTurnIndex] = useState(null);
+  const [skipCooldownNextTurn, setSkipCooldownNextTurn] = useState(false);
 
   useEffect(() => {
     if (champDmg === character.id) {
@@ -115,6 +118,34 @@ export function MainGameView({ setCurrentView, character, allCharacters }) {
       handleHeal(heal);
     }
   }, [champHeal, heal]);
+
+  useEffect(() => {
+    if (!combatState || !combatState.turnOrder) return;
+
+    const currentEntity = combatState.turnOrder[combatState.turnIndex];
+    const isMyTurn =
+      currentEntity === character.id || currentEntity === character.name;
+    const turnChanged = lastTurnIndex !== null && combatState.turnIndex !== lastTurnIndex;
+
+    if (isMyTurn && turnChanged) {
+      if (skipCooldownNextTurn) {
+        setSkipCooldownNextTurn(false);
+      } else if (normalCooldown > 0) {
+        const nextCooldown = Math.max(0, normalCooldown - 1);
+        setNormalCooldown(nextCooldown);
+        localStorage.setItem("normalCooldown", nextCooldown);
+      }
+    }
+
+    setLastTurnIndex(combatState.turnIndex);
+  }, [combatState, character, lastTurnIndex, normalCooldown, skipCooldownNextTurn]);
+
+  useEffect(() => {
+    if (combatState?.inCombat === false && normalCooldown !== 0) {
+      setNormalCooldown(0);
+      localStorage.setItem("normalCooldown", 0);
+    }
+  }, [combatState, normalCooldown]);
 
   const handleDamage = (dmg) => {
     console.log("Taking damage");
@@ -146,6 +177,7 @@ export function MainGameView({ setCurrentView, character, allCharacters }) {
         "normalCooldown",
         character.abilities.regular.cooldown,
       );
+      setSkipCooldownNextTurn(true);
     }
 
     if (type === "Ultimativ") {
