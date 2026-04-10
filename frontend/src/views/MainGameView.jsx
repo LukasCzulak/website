@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Button, Modal } from "@mantine/core";
+import { Alert, Button, Modal, Center } from "@mantine/core";
 import { IconInfoCircle, IconSword } from "@tabler/icons-react";
 import { ParsedText } from "../utils/ParsedText";
 import { useWebSocket } from "../utils/WebSocketContext";
@@ -58,7 +58,6 @@ function AbilityRow({
             alt={type}
             className="ability-img"
           />
-          
         ) : (
           <div className="ability-img-placeholder">{type.charAt(0)}</div>
         )}
@@ -88,7 +87,8 @@ function AbilityRow({
 
 export function MainGameView({ setCurrentView, character, allCharacters }) {
   const [selectedAbility, setSelectedAbility] = useState(null);
-  const { combatState, champDmg, dmg, champHeal, heal, ulti, cue } = useWebSocket();
+  const { combatState, champDmg, dmg, champHeal, heal, ulti, cue } =
+    useWebSocket();
 
   const [currentHP, setCurrentHP] = useState(() => {
     return localStorage.getItem("currentHP") || character.hitpoints;
@@ -104,6 +104,8 @@ export function MainGameView({ setCurrentView, character, allCharacters }) {
 
   const [lastTurnIndex, setLastTurnIndex] = useState(null);
   const [skipCooldownNextTurn, setSkipCooldownNextTurn] = useState(false);
+
+  const [hasCue, setHasCue] = useState(false);
 
   useEffect(() => {
     if (champDmg === character.id) {
@@ -128,12 +130,20 @@ export function MainGameView({ setCurrentView, character, allCharacters }) {
   }, [ulti, character.id]);
 
   useEffect(() => {
+    if (cue === character.id) {
+      console.log("your cue");
+      setHasCue(true);
+    }
+  }, [cue, character.id]);
+
+  useEffect(() => {
     if (!combatState || !combatState.turnOrder) return;
 
     const currentEntity = combatState.turnOrder[combatState.turnIndex];
     const isMyTurn =
       currentEntity === character.id || currentEntity === character.name;
-    const turnChanged = lastTurnIndex !== null && combatState.turnIndex !== lastTurnIndex;
+    const turnChanged =
+      lastTurnIndex !== null && combatState.turnIndex !== lastTurnIndex;
 
     if (isMyTurn && turnChanged) {
       if (skipCooldownNextTurn) {
@@ -146,7 +156,13 @@ export function MainGameView({ setCurrentView, character, allCharacters }) {
     }
 
     setLastTurnIndex(combatState.turnIndex);
-  }, [combatState, character, lastTurnIndex, normalCooldown, skipCooldownNextTurn]);
+  }, [
+    combatState,
+    character,
+    lastTurnIndex,
+    normalCooldown,
+    skipCooldownNextTurn,
+  ]);
 
   useEffect(() => {
     if (combatState?.inCombat === false && normalCooldown !== 0) {
@@ -210,6 +226,20 @@ export function MainGameView({ setCurrentView, character, allCharacters }) {
 
   return (
     <div className="game-container">
+      {hasCue && (
+        <div className="cue-overlay">
+          <Alert variant="filled" color="red" className="cue-alert">
+            Deine Strophe ist die Nächste, mach dich bereit zum Singen!
+            <button
+              className="custom-modal-close"
+              onClick={() => setHasCue(false)}
+            >
+              x
+            </button>
+          </Alert>
+        </div>
+      )}
+
       {combatState?.inCombat && (
         <div
           className="initiative-tracker"
