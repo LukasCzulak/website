@@ -17,4 +17,10 @@ export const devlogs = [
         title: "Step 2: The Base-10 Foundation", 
         content: "Instead of jumping straight into complex 64-bit bitwise operations, I decided to start with a 'Base-10' architecture using a std::vector<uint8_t>. By storing one decimal digit per array slot, I was able to implement addition and multiplication exactly like grade-school math. It might not be the most memory-efficient approach yet, but it allowed me to perfectly map out my logic, handle edge cases like carry rollovers, and write a comprehensive Google Test suite to guarantee my math is actually correct. Now that I have a reliable, fully-tested baseline, the next phase is to build the Lexer and Parser so the program can actually read math expressions."
     },
+    {
+        id: 3,
+        date: "19.06.2026",
+        title: "Step 3: The break and the Lexer",
+        content: "As you can see from the date, I needed to take a break of a few months from this project cause I was busy at university and privately. But now I want to again start working on the BigInts again! Note that I am currently writing my bachelor thesis, though, so it might and will probably happen that the next steps again will have pretty big breaks in them... \n Anyways, when I came back I saw that I already finished one of the next major steps: The Lexer, which I based heavily on my experience teaching OCaml. In general, it is pretty simple with the only exception being that I put the actual BigInt as an optional, such that the conversion from string to actual BigInt happens early in the lexer and can be used after."
+    }
 ];
