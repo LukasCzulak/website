@@ -22,5 +22,11 @@ export const devlogs = [
         date: "19.06.2026",
         title: "Step 3: The break and the Lexer",
         content: "As you can see from the date, I needed to take a break of a few months from this project cause I was busy at university and privately. But now I want to again start working on the BigInts again! Note that I am currently writing my bachelor thesis, though, so it might and will probably happen that the next steps again will have pretty big breaks in them... \n Anyways, when I came back I saw that I already finished one of the next major steps: The Lexer, which I based heavily on my experience teaching OCaml. In general, it is pretty simple with the only exception being that I put the actual BigInt as an optional, such that the conversion from string to actual BigInt happens early in the lexer and can be used after."
+    },
+    {
+        id: 4,
+        date: "21.06.2026",
+        title: "Step 4: The Parser",
+        content: "The next logical step after the Lexer was the Parser and it's creation of an AST. At this point my program only supports addition, multiplication and parentheses, so writing the Parser for was was pretty straight-forward and I decided for a simple recursive Descent parser. It creates the AST, which then simply evaluates its nodes and uses the correct operations to connect them. When called on the root, this will then evaluate the whole tree, returning the final result. \nI am thinking about also writing some kind of AST-optimizer because that sounds like a fun challenge, but I am not sure yet how that could look like, so for now I will focus completing the main functionalities."
     }
 ];
